@@ -1,0 +1,5 @@
+#配置了 port 和 context-path 就可以通过  http://localhost:8081/girl/hello来进行访问
+server.port=8081
+#server.context-path=/girl 已经过时
+server.servlet.context-path=/girl 
+

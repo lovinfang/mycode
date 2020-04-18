@@ -1,0 +1,9 @@
+1、创建工程 
+mvn archetype:generate -DgroupId=springMVCDemo -DartifactId=springMVCDemo -DarchetypeArtifactId=maven-archetype-webapp
+
+2、jetty启动
+D:\workspace\springMVCDemo>mvn jetty:run     --注意端口号
+
+
+
+

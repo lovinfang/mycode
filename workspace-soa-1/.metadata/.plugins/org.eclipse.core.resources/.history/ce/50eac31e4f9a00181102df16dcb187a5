@@ -1,0 +1,6 @@
+package com.lovin.framework.service;
+
+public interface FrameworkServiceTest {
+
+	public String sleep(String param);
+}

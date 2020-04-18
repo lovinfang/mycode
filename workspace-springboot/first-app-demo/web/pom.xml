@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>first-app-demo</artifactId>
+        <groupId>com.lovin</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>web</artifactId>
+
+    <!-- 默认是打jar包 如果要打成 war包 那么要在web模块的java下src/main
+        下添加webapp/WEB-INF/web.xml(空文件也可以)
+        mvn -Dmaven.test.skip -U clean package
+        java -jar web-0.0.1-SNAPSHOT.war
+    -->
+    <packaging>war</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.lovin</groupId>
+            <artifactId>persistence</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+    <!--
+        如果不添加 <mainClass>配置那么mvn -Dmaven.test.skip -U clean package会出现找不到main class
+        -U 表示更新第三方依赖jar 包
+        如果将此build放在最外层的pom中，那么会出现很多类找不到（比如 User）其实web才是最终的程序启动入口
+        然后在web模块的target中执行 java -jar web-0.0.1-SNAPSHOT.jar 能够启动程序
+    -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.lovin.firstappdemo.FirstAppDemoApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

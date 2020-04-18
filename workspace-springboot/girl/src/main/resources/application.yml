@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.112.128:3306/test
+    username: root
+    password: lovin-mysql
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+#D:\workspace-springboot\target>java -jar girl-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev  这样启动亦可

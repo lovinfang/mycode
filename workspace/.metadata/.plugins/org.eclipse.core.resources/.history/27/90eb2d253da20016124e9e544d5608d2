@@ -1,0 +1,126 @@
+package com.asiainfo.cm.common.util;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+
+import com.ai.appframe2.common.SessionManager;
+import com.ai.appframe2.privilege.UserInfoInterface;
+import com.ai.appframe2.service.ServiceFactory;
+import com.asiainfo.cm.common.data.OIReqInfo;
+import com.asiainfo.cm.common.data.OI_PubInfo;
+import com.asiainfo.cm.common.data.OI_Request;
+import com.asiainfo.cm.common.data.UserOrgInfoDO;
+import com.asiainfo.cm.common.service.interfaces.IBaseSV;
+import com.asiainfo.cm.module.channelinfo.data.RegionAreaRsp;
+import com.asiainfo.cm.module.channelinfo.service.interfaces.IRegionAreaSV;
+import com.google.gson.Gson;
+
+public class HttpJsonHelper {
+	
+	private static transient Log log = LogFactory.getLog(HttpJsonHelper.class);
+
+	public String callHttpJson(OI_Request request,String url){
+		String result = "";
+		String jsonParamStr = "";
+		if(null != request){
+			jsonParamStr = formatPojoBeanToJson(request);
+			log.debug("jsonParamStr="+jsonParamStr);
+			if(null != jsonParamStr && !"".equals(jsonParamStr)){
+				//进行http 调用远程接口
+				result = post(url,jsonParamStr);
+			}
+		}
+		return result;
+	};
+	
+	private String formatPojoBeanToJson(OI_Request request){
+		String jsonStr = "";
+		try {
+			if(null != request){
+				log.debug("调用外围接口时转换入参信息为json格式字符串");
+				OIReqInfo reqInfo = new OIReqInfo();
+				
+				//封装PubInfo的数据信息
+				OI_PubInfo pubInfo = new OI_PubInfo();
+				String transactionId = "CL"+System.currentTimeMillis(); // 交易流水
+				String transactionTime = decodeTimestamp("yyyyMMddHHmmssSSS",new Timestamp(System.currentTimeMillis()));
+				String interfaceId = "00";  // 接口标识 后续可以放入配置文件中
+				String interfaceType = "02"; // 接口类型  后续可以放入配置文件中
+				/*String orgId = ""; //操作员组织Id
+				String clientIP = "";
+				String opId = "";  //操作员Id   TODO
+				String clerkId = ""; //店员编号     TODO
+				if(SessionManager.getUser() != null){
+					UserInfoInterface userInfo= SessionManager.getUser();
+					orgId =  String.valueOf(userInfo.getOrgId());
+					clientIP = userInfo.getIP();
+				}*/
+				
+				String orgId = "2123"; //操作员组织Id
+				String clientIP = "127.0.0.1";
+				String opId = "123";  //操作员Id   TODO
+				String clerkId = "123"; //店员编号     TODO
+				
+				
+				String regionCode = "";
+				String countyCode = "";
+				/*IBaseSV baseSV =  (IBaseSV) ServiceFactory.getService(IBaseSV.class);
+				UserOrgInfoDO userOrgInfoDo = baseSV.getUserOrgInfo();
+				if(null != userOrgInfoDo){
+					if(null != userOrgInfoDo.getRegionid() && !"".equals(userOrgInfoDo.getRegionid())){
+						regionCode = userOrgInfoDo.getRegionid();
+					}
+					if(null != userOrgInfoDo.getCountyid() && !"".equals(userOrgInfoDo.getCountyid())){
+						countyCode = userOrgInfoDo.getCountyid();
+					}
+				}*/
+				regionCode = "571";
+				countyCode = "5711";
+				
+				pubInfo.setTransactionId(transactionId);
+				pubInfo.setTransactionTime(transactionTime);
+				pubInfo.setInterfaceId(interfaceId);
+				pubInfo.setInterfaceType(interfaceType);
+				pubInfo.setOrgId(orgId);
+				pubInfo.setClientIP(clientIP);
+				pubInfo.setRegionCode(regionCode);
+				pubInfo.setCountyCode(countyCode);
+				pubInfo.setOpId(opId);
+				pubInfo.setClerkId(clerkId);
+				
+				reqInfo.setRequest(request);
+				reqInfo.setPubInfo(pubInfo);
+				
+				//将调用外围系统的入参实体转换成 json对象
+				Gson gosn = new Gson();
+				jsonStr = gosn.toJson(reqInfo);
+				System.out.println(jsonStr);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return jsonStr;
+	}
+	
+	public String decodeTimestamp(String format, Timestamp time) throws Exception
+	{
+	   SimpleDateFormat sdf = new SimpleDateFormat(format);
+	   return sdf.format(time);
+	}
+	
+}

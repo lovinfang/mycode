@@ -1,0 +1,5 @@
+package com.lovin.framework.service;
+
+public class FrameworkInterface {
+
+}

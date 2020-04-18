@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3ffdf366-2373-4a4a-9925-1e0fb4524669" name="Default Changelist" comment="" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="E:/apache-maven-3.2.5" />
+        <option name="userSettingsFile" value="E:\apache-maven-3.2.5\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1PbKwzbYF9wgkeS8duFeGlO29JQ" />
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="D:/GitWorkSpace/mydemo" />
+    <property name="settings.editor.selected.configurable" value="File.Encoding" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.smart.proxy.cglibProxy" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\masterSpring\code\chapter7\src\main\java\com\smart\proxy\cglibProxy" />
+      <recent name="D:\masterSpring\code\chapter7\src\main\java\com\smart\proxy\jdkProxy" />
+      <recent name="D:\masterSpring\code\chapter7\src\main\java\com\smart\proxy" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="TestNG.ForumServiceCglibProxyTest.cglibProxy">
+    <configuration name="ForumServiceCglibProxyTest.cglibProxy" type="TestNG" temporary="true" nameIsGenerated="true">
+      <module name="chapter7" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smart.proxy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smart.proxy" />
+      <option name="MAIN_CLASS_NAME" value="com.smart.proxy.ForumServiceCglibProxyTest" />
+      <option name="METHOD_NAME" value="cglibProxy" />
+      <option name="TEST_OBJECT" value="METHOD" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ForumServiceJdkProxyTest.jdkProxy" type="TestNG" temporary="true" nameIsGenerated="true">
+      <module name="chapter7" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smart.proxy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smart.proxy" />
+      <option name="MAIN_CLASS_NAME" value="com.smart.proxy.ForumServiceJdkProxyTest" />
+      <option name="METHOD_NAME" value="jdkProxy" />
+      <option name="TEST_OBJECT" value="METHOD" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ForumServiceTest.proxy" type="TestNG" temporary="true" nameIsGenerated="true">
+      <module name="chapter7" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smart.proxy.nomal.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.smart.proxy" />
+      <option name="MAIN_CLASS_NAME" value="com.smart.proxy.ForumServiceTest" />
+      <option name="METHOD_NAME" value="proxy" />
+      <option name="TEST_OBJECT" value="METHOD" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="TestNG.ForumServiceCglibProxyTest.cglibProxy" />
+        <item itemvalue="TestNG.ForumServiceJdkProxyTest.jdkProxy" />
+        <item itemvalue="TestNG.ForumServiceTest.proxy" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3ffdf366-2373-4a4a-9925-1e0fb4524669" name="Default Changelist" comment="" />
+      <created>1566137598791</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1566137598791</updated>
+      <workItem from="1566137601864" duration="3526000" />
+      <workItem from="1575547662098" duration="269000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+</project>

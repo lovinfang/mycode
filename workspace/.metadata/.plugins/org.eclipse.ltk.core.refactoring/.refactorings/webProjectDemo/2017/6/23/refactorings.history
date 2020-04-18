@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;webProjectDemo/src/main/webapp/META-INF/context.xml&apos; to &apos;context.xml_bak&apos;" description="Rename resource &apos;context.xml&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/main/webapp/META-INF/context.xml" name="context.xml_bak" stamp="1496583598820" updateReferences="true"/>
+</session>

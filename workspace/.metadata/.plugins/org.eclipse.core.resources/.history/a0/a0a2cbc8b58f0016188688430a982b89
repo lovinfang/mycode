@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>指标项管理</title>
+<link rel="stylesheet" href="../../assets/aries/css/base/aries-base.css" />
+<script src="../../assets/aries/lib/jquery.js"></script>
+<script src="../../assets/aries/main/sea.js"></script>
+<script type="text/javascript" src="../../js/common/Comm.js"></script>
+<script type="text/javascript" src="../../component/jssearch/autoComplete.js"></script>
+<script type="text/javascript" src="../../component/jssearch/chineseSearch.js"></script>
+<script type="text/javascript" src="../../component/jssearch/pinyin.js"></script>
+<script type="text/javascript" src="../../js/lib/jquery/jqueryExtend.js"></script>
+<script type="text/javascript" src="../../assets/aries/lib/jquery.blockUI.js"></script>	
+<script type="text/javascript" src="js/chnlKpiInfoManager.js"></script>
+</head>
+<body>
+	<div id="main_page" class="hide">
+	<div aeType="aeForm" id="warnorder" aeInit="true" class="form-horizontal">
+		<div class="form-group">
+			<div class="form-horizontal">
+				<label class="col-xs-2 control-label">地市：</label>
+		        <div class="col-xs-2">		
+		           <span aeType="aeCombo" style="top: 100px;" id="RegionId" aeInit="true" emptyText="全部" showClear="true" optionField="districtName" valueField="regionId" onValueChange="getRegionChange"></span>
+		        </div>
+		        <label class="col-xs-2 control-label">一级类型：</label>
+				<div class="col-xs-2">
+            	    <span aeType="aeCombo" id="firstOrgType" aeInit="true" emptyText="全部" optionField="codeName" valueField="codeValue" onValueChange="getfirstChange"></span>
+         		</div>
+         		<label class="col-xs-2 control-label">二级类型：</label>
+				<div class="col-xs-2">
+            	    <span aeType="aeCombo" id="secOrgType" aeInit="true" dataField="opponentType" emptyText="全部" showClear="true" optionField="codeName" valueField="codeValue" onValueChange="getSecChange"></span>
+         		</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="form-horizontal">
+				<label class="col-xs-2 control-label">指标项：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="kpiId" aeInit="true" emptyText="请选择指标项名称" showClear="true" optionField="codeName" valueField="codeValue"></span>
+         		</div>
+         		<label class="col-xs-2 control-label">是否首页展现：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isFrontPageShow" aeInit="true" emptyText="全部" showClear="true" optionField="codeName" valueField="codeValue"></span>
+         		</div>
+         		<label class="col-xs-2 control-label">一线人员展现：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isFrontShow" aeInit="true" emptyText="全部" showClear="true" optionField="codeName" valueField="codeValue"></span>
+         		</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="form-horizontal">
+				<label class="col-xs-2 control-label">是否星级评定：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isStar" aeInit="true" emptyText="全部" showClear="true" optionField="codeName" valueField="value"></span>
+         		</div>
+         		<label class="col-xs-2 control-label">是否集中考核：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isTogether" aeInit="true" emptyText="全部" showClear="true" optionField="text" valueField="value"></span>
+         		</div>
+         		<label class="col-xs-2 control-label">是否渠道评估：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isChannel" aeInit="true" emptyText="全部" showClear="true" optionField="text" valueField="value"></span>
+         		</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="form-horizontal">
+				<label class="col-xs-2 control-label">是否预警：</label>
+                <div class="col-xs-2">
+            	    <span aeType="aeCombo" id="isUrgent" aeInit="true" emptyText="全部" showClear="true" optionField="text" valueField="value"></span>
+         		</div>
+			</div>
+		</div>		
+	</div>
+	</div>
+</body>
+</html>

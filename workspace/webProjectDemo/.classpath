@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="target/classes" path="src/main/java">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry excluding="**" kind="src" output="target/classes" path="src/main/resources">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry excluding="**" kind="src" output="target/test-classes" path="src/test/resources">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/annotations-api.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/catalina.jar"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/catalina-ant.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/catalina-ha.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/catalina-tribes.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/ecj-4.3.1.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/el-api.jar"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/jasper.jar"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/jasper-el.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/jsp-api.jar"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/servlet-api.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/tomcat-coyote.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/tomcat-dbcp.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/tomcat-i18n-es.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/tomcat-i18n-fr.JAR"/>
+	<classpathentry kind="lib" path="D:/workSoftware/apache-tomcat-6.0.41/lib/tomcat-i18n-ja.JAR"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

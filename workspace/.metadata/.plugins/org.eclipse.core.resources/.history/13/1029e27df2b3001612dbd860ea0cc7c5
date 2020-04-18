@@ -1,0 +1,136 @@
+package com.asiainfo.hicm.module.report.exe.task;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.ai.appframe2.complex.cache.CacheFactory;
+import com.ai.appframe2.service.ServiceFactory;
+import com.ai.common.cache.BsFtpCacheImpl;
+import com.ai.common.cache.BsFtpPathCacheImpl;
+import com.ai.common.ivalues.IBOBsFtpPathValue;
+import com.ai.common.ivalues.IBOBsFtpValue;
+import com.asiainfo.appframe.ext.exeframe.task.interfaces.ITask;
+import com.asiainfo.cm.common.util.ReportUtil;
+import com.asiainfo.cm.common.util.SFTPUtil;
+import com.asiainfo.cm.module.chnlkpiinfo.bo.BOChnlChkTplDtlBean;
+import com.asiainfo.cm.module.chnlkpiinfo.bo.BOChnlKpiInfoBean;
+import com.asiainfo.cm.module.chnlkpiinfo.service.interfaces.IChnlKpiInfoSV;
+import com.asiainfo.hicm.module.chnlkpiinfo.dao.interfaces.IChnlChkTplHiDAO;
+
+public class RptDailyKpiInfoTplTask implements ITask{
+	
+	protected final Log log = LogFactory.getLog(this.getClass().getName());
+
+	@Override
+	public String doTask(long arg0) throws Exception {
+		
+		String date = ReportUtil.getYesterDay();
+		File kpiInfoFile = new File("D:\\test\\kpi_info.dat");
+		File chnlChkTplDtlFile = new File("D:\\test\\chnlChkTplDtlFile.dat");
+		
+		/*log.error(">>>>>>开始处理KPI指标信息：");
+		IChnlKpiInfoSV ichnlKpiInfoSV = (IChnlKpiInfoSV) ServiceFactory.getService(IChnlKpiInfoSV.class);
+		BOChnlKpiInfoBean[] beans =  ichnlKpiInfoSV.qryChnlKpiInfoList();
+		StringBuffer sb = new StringBuffer();
+		if(null != beans && beans.length > 0){
+			for(BOChnlKpiInfoBean bean : beans){
+				StringBuffer temp = new StringBuffer();
+				String kpi_date = date;
+				String kpi_id = (null != bean.getKpiId()?bean.getKpiId().trim():"");
+				String kpi_name = (null != bean.getKpiName()?bean.getKpiName().trim():"");
+				String kpi_period = (null != bean.getKpiPeriod()?bean.getKpiPeriod().trim():"");
+				String unit = (null != bean.getUnit().trim()?bean.getUnit().trim():"");
+				String description = (null != bean.getDescription()?bean.getDescription().trim():"");
+				String link_kpi_id = (null != bean.getLinkKpiId()?bean.getLinkKpiId().trim():"");
+				String chnl_type = (null != bean.getRemark()?bean.getRemark().trim():"");
+				String chnl_busi = (null != bean.getExt1()?bean.getExt1().trim():"");
+				String eff_date = (null != bean.getExt2()?bean.getExt2().trim():"");
+				String exp_date = (null != bean.getExt3()?bean.getExt2().trim():"");
+				temp.append(kpi_date).append("#").append(kpi_id).append("#").append(kpi_name).append("#")
+				    .append(kpi_period).append("#").append(unit).append("#").append(description).append("#")
+				    .append(link_kpi_id).append("#").append(chnl_type).append("#").append(chnl_busi).append("#")
+				    .append(eff_date).append("#").append(exp_date).append("\n");
+				sb.append(temp);
+			}
+		}
+		if(!kpiInfoFile.exists()){
+			kpiInfoFile.createNewFile();
+		}*/
+		
+		log.error(">>>>>>开始处理KPI模板信息：");
+		IChnlChkTplHiDAO iChnlChkTplHiDAO = (IChnlChkTplHiDAO) ServiceFactory.getService(IChnlChkTplHiDAO.class);
+		BOChnlChkTplDtlBean[] chnlChkTplBeanList = iChnlChkTplHiDAO.qryChnlChkTplDtlBeans();
+		StringBuffer chnk_tpl_dtl_sb = new StringBuffer();
+		if(null != chnlChkTplBeanList && chnlChkTplBeanList.length > 0){
+			for(BOChnlChkTplDtlBean bean : chnlChkTplBeanList){
+				StringBuffer temp = new StringBuffer();
+				String kpi_date = date;
+				String kpi_id = (null != bean.getKpiId()?bean.getKpiId().trim():"");
+				String kpi_name = (null != bean.getKpiName()?bean.getKpiName().trim():"");
+				String kpi_value = bean.getKpiValue()+"";
+				String ref_value = bean.getRefValue()+"";
+				String score3 = bean.getScore3() + "";
+				String score4 = bean.getScore4() + "";
+				String create_date = bean.getCreateDate()
+				
+			}
+		}
+		
+		if(!chnlChkTplDtlFile.exists()){
+			chnlChkTplDtlFile.createNewFile();
+		}
+		
+		/*//将查询的写入文件中
+		log.error(">>>>>>将文件上传至服务器：");
+		writeStringToFile(kpiInfoFile.getPath(),sb);
+		//上传文件
+		IBOBsFtpPathValue objIBsFtpPathValue = (IBOBsFtpPathValue) CacheFactory.get(BsFtpPathCacheImpl.class, "SFTP_TEST");
+        IBOBsFtpValue objIBsFtpValue = (IBOBsFtpValue) CacheFactory.get(BsFtpCacheImpl.class, objIBsFtpPathValue.getFtpCode());
+        if(objIBsFtpValue != null){
+        	SFTPUtil sftp = new SFTPUtil(objIBsFtpValue.getUsername(), 
+        			objIBsFtpValue.getPassword(), objIBsFtpValue.getHostIp(), objIBsFtpValue.getPort());
+        	sftp.login();
+        	sftp.upload(objIBsFtpPathValue.getRemotePath(), kpiInfoFile.getPath());
+        }*/
+		
+		return "指标信息上传成功";
+	}
+	
+	
+	public void writeStringToFile(String filePath,StringBuffer sb){
+		try {
+			FileOutputStream fos = new FileOutputStream(filePath);
+			String str = sb.toString();
+			try {
+				fos.write(str.getBytes());
+				fos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public String timestampToString(Timestamp time){
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmss");
+		
+		return sdf.format(time);
+	}
+	
+	public static void main(String[] args) {
+		try {
+			new RptDailyKpiInfoTplTask().doTask(10l);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}

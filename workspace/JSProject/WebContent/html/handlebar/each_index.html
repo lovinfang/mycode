@@ -1,0 +1,93 @@
+<!-- 序号是指：在循环过程中，当前循环的索引，说白了，就是当前为第几次循环，一般从0开始，Handlebars.js中也是如此。
+
+有什么用呢？最常见的是在显示table的时候，给每行加一个序号，清晰的展示出页面上共有多少条记录，如上边的例子。
+
+ 除此之外，小菜为了在循环中区分不同的id，恰好需要一个序号，确保id不重复，用过bootstrap的童鞋应该知道，好多事件可以通过id定位，例如Listgroup控件。
+
+废话少说，在Handlebars.js中，可以通过{{@index}}来获取当前的索引，也就是说@index这个变量就代表了当前索引。
+
+在上边的例子里，table的序号从0开始不太好，于是注册了一个Helper，将索引+1。
+-->
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <META http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>关于循环中索引的使用 - by lovin</title>
+  </head>
+  <body>
+    <h1>关于循环中索引的使用</h1>
+    <!--基础html框架-->
+    <table>
+      <thead>
+        <tr>
+          <th>序号</th>
+          <th>姓名</th>
+          <th>性别</th>
+          <th>年龄</th>
+        </tr>
+      </thead>
+      <tbody id="tableList">
+        
+      </tbody>
+    </table>
+    
+    <!--插件引用-->
+    <script type="text/javascript" src="../../script/jquery/jquery.js"></script>
+    <!--注意！这个例子用的是新版本handlebars，旧版本不支持-->
+    <script type="text/javascript" src="../../script/handlebars/handlebars.js"></script>
+    
+    <!--Handlebars.js模版-->
+    <!--Handlebars.js模版放在script标签中，保留了html原有层次结构,模版中要写一些操作语句-->
+    <!--id可以用来唯一确定一个模版,type是模版固定的写法-->
+    <script id="table-template" type="text/x-handlebars-template">
+      {{#each student}}
+      <tr>
+        <td>{{addOne @index}}</td>
+        <td>{{name}}</td>
+        <td>{{sex}}</td>
+        <td>{{age}}</td>
+      </tr>
+      {{/each}}
+    </script>
+    
+    <!--进行数据处理、html构造-->
+    <script type="text/javascript">
+      $(document).ready(function() {
+        //模拟的json对象
+         var data = {
+                      "student": [
+                          {
+                              "name": "张三",
+                              "sex": "0",
+                              "age": 18
+                          },
+                          {
+                              "name": "李四",
+                              "sex": "0",
+                              "age": 22
+                          },
+                          {
+                              "name": "妞妞",
+                              "sex": "1",
+                              "age": 19
+                          }
+                      ]
+                  };
+        
+        //注册一个Handlebars模版，通过id找到某一个模版，获取模版的html框架
+        //$("#table-template").html()是jquery的语法，不懂的童鞋请恶补。。。
+        var myTemplate = Handlebars.compile($("#table-template").html());
+        
+        //注册一个Handlebars Helper,用来将索引+1，因为默认是从0开始的
+        Handlebars.registerHelper("addOne",function(index,options){
+          return parseInt(index)+1;
+        });
+        
+        //将json对象用刚刚注册的Handlebars模版封装，得到最终的html，插入到基础table中。
+        $('#tableList').html(myTemplate(data));
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+package com.lovin.soa.registry;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.context.ApplicationContext;
+
+import com.lovin.soa.configBean.Protocol;
+import com.lovin.soa.configBean.Registry;
+import com.lovin.soa.configBean.Service;
+import com.lovin.soa.redis.RedisApi;
+
+/** 
+ * @Description 这个是redis的注册中心处理类 
+ * @ClassName   RedisRegistry 
+ * @Date        2018年08月05日 下午15:15:40 
+ * @Author      dn-jack 
+ */
+public class RedisRegistry implements BaseRegistry{
+
+	public boolean registry(String ref, ApplicationContext application) {
+		Protocol protocol = application.getBean(Protocol.class);
+		//拿到Service的所有的实例
+		Map<String, Service> services = application.getBeansOfType(Service.class);
+		Registry registry = application.getBean(Registry.class);
+		RedisApi.createJedisPool(registry.getAddress()); //启动redis
+		for (Map.Entry<String, Service> entry : services.entrySet()) {
+			if (entry.getValue().getRef().equals(ref)) {
+				
+			}
+		}
+		return false;
+	}
+
+	public List<String> getRegistry(String id, ApplicationContext application) {
+		return null;
+	}
+
+}

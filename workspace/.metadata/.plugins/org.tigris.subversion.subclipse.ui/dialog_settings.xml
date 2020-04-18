@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item value="87" key="DifferencesDialog.location.y"/>
+	<item value="182" key="HistoryTableProvider.HistoryDialog.注释"/>
+	<item value="236" key="HistoryTableProvider.SVNHistoryPage.作者"/>
+	<item value="591" key="HistoryTableProvider.SVNHistoryPage.注释"/>
+	<item value="483" key="HistoryDialog.location.x"/>
+	<item value="29" key="HistoryDialog.location.y"/>
+	<item value="525" key="LockDialog.size.x"/>
+	<item value="441" key="LockDialog.size.y"/>
+	<item value="1061" key="TreeConflictsView.col.Description"/>
+	<item value="393" key="RevertDialog.size.y"/>
+	<item value="843" key="DifferencesDialog.size.x"/>
+	<item value="D:/workspace/CMCgy/src/com/asiainfo/cm/common/PageMatch.java" key="TreeConflictsView.resource"/>
+	<item value="296" key="HistoryTableProvider.SVNHistoryPage.日期"/>
+	<item value="73" key="HistoryTableProvider.HistoryDialog.作者"/>
+	<item value="525" key="RevertDialog.size.x"/>
+	<item value="416" key="DifferencesDialog.size.y"/>
+	<item value="262" key="DifferencesDialog.location.x"/>
+	<item value="525" key="GenerateDiffFileWizard.size.x"/>
+	<item value="92" key="HistoryTableProvider.HistoryDialog.日期"/>
+	<item value="484" key="GenerateDiffFileWizard.size.y"/>
+	<item value="477" key="HistoryDialog.weights.0"/>
+	<item value="96" key="CommitDialog.location.y"/>
+	<item value="59" key="CommitDialog.location.x"/>
+	<item value="339" key="HistoryDialog.weights.2"/>
+	<item value="37" key="HistoryTableProvider.HistoryDialog.修订"/>
+	<item value="183" key="HistoryDialog.weights.1"/>
+	<item value="421" key="RevertDialog.location.x"/>
+	<item value="500" key="CommitDialog.weights.0"/>
+	<item value="500" key="CommitDialog.weights.1"/>
+	<item value="102" key="RevertDialog.location.y"/>
+	<item value="177" key="TreeConflictsView.col.Resource"/>
+	<item value="441" key="CommitDialog.size.y"/>
+	<item value="1186" key="CommitDialog.size.x"/>
+	<item value="70" key="LockDialog.location.y"/>
+	<item value="false" key="TreeConflictsView.container"/>
+	<item value="421" key="LockDialog.location.x"/>
+	<item value="421" key="GenerateDiffFileWizard.location.x"/>
+	<item value="42" key="GenerateDiffFileWizard.location.y"/>
+	<item value="119" key="HistoryTableProvider.SVNHistoryPage.修订"/>
+	<item value="400" key="HistoryDialog.size.x"/>
+	<item value="400" key="HistoryDialog.size.y"/>
+	<section name="CommitWizard">
+		<item value="500" key="VWeight2"/>
+		<item value="500" key="VWeight1"/>
+		<item value="false" key="ShowCompare"/>
+	</section>
+</section>

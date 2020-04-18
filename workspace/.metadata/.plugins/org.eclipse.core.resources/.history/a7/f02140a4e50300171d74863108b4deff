@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" class="checked">
+<head>
+<meta charset="UTF-8">
+<link href="../../assets/aries/css/base/aries-base.css" rel="stylesheet" type="text/css" media="screen" />
+<link href="../../assets/aries/css/common.css" rel="stylesheet" type="text/css">
+<script src="../../assets/aries/lib/jquery.js" type="text/javascript" ></script>
+
+<title>渠道集中化管理平台</title>
+</head>
+<body>
+	<div class="main-nav">
+		<div class="container doc-header" style="position: relative">
+			<a class="link-logo" href=""></a>
+		</div>
+		<div class="main-nav-2-content">
+			<div class="main-nav-2" style="display: block">
+				<ul class="container">					
+				<li class="current">基础管理</li>
+					<li>流程管理</li>
+					<li>任务管理</li>
+					<li>渠道调度</li>
+					<li>渠道监控</li> 
+					<li>考核评估</li>
+					<li>厅效评估</li>
+					<li>分层分级</li>
+					
+				</ul>
+				<div class="main-nav-3-content">
+ 				<div class="main-nav-3" style="display: block">
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li class="current"><a target="../../module/channelinfo/chnlInfoSearch.html">渠道综合查询</a></li>
+								<li><a target="../../hncm/channelinfo/hnOpponentBaseInfo.html">竞争对手网点录入</a></li>
+								<li><a target="../../module/channelinfo/channelChainOrgMana.html">合作商（连锁渠道）管理</a></li>
+								<li><a target="../../module/channelinfo/myChnlExtInfoCfg.html">渠道扩展信息配置</a></li>
+								<li><a target="../../module/channelinfo/chnlPointManage.html">宣传点位管理</a></li>
+								<li><a target="../../module/channelinfo/chnlTinyAreaManager.html">微片区管理</a></li>
+								<li><a target="../../module/channelinfo/channelBusiAreaMana2.html">商圈区管理</a></li>
+								<li><a target="../../module/channelinfo/countryBaseInfo.html">行政村/社区管理</a></li>
+								<li><a target="../../module/channelinfo/thorpeBaseInfoCfg.html">乡镇/街道管理</a></li>
+								<li><a target="../../module/PatrolStore/chnlMissionGroup2.html">群组管理</a></li>
+								<li><a target="../../module/channelinfo/agentInfoMana.html">代理商信息管理</a></li>
+								<li><a target="../../module/channelinfo/businessMana.html">营业部信息管理</a></li>
+								<li><a target="../../module/channelinfo/channelOperatorLog.html">渠道操作日志查询</a></li>
+
+							</ul>
+						</div>
+					</div>	 			
+	 		<div class="main-nav-3">
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li><a target="../../module/workflow/FlowOrderSearch.html">工单流程管理</a></li>
+								<li><a target="../../module/workflow/flowtranconfigqry.html">工作流配置</a></li>
+								<li><a target="../../module/workflow/FlowApply.html">流程申请</a></li>
+								<li><a target="../../module/workflow/SpecialPolicyGrantSearch.html">特殊政策发放</a></li>
+								<li><a target="../../module/question/questionList.html">问题反馈</a></li>
+							</ul>
+						</div>
+					</div>  
+				<div class="main-nav-3">
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li><a target="../../module/PatrolStore/patrolConfiguration.html">巡店配置</a></li>
+								<li><a target="../../module/channelinfo/chnlTaskManager.html">任务管理</a></li>
+								<li><a target="../../module/channelinfo/chnlMissionTrack.html">巡店轨迹追踪</a></li>								
+							</ul>
+						</div>
+					</div> 
+			<div class="main-nav-3" >
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li ><a target="../../module/chnlscheduler/marketChangeMain.html" >市场异动</a></li>
+								<li><a target="../../module/chnlscheduler/businessChangeMain.html" >业务异动</a></li>
+								<li><a target="../../module/chnlscheduler/competeInfoManage.html">竞情调度</a></li>
+								<li><a target="../../module/chnlscheduler/commercialInfoManage.html">商情调度</a></li>
+							</ul>
+						</div>
+					</div> 
+
+		 			<div class="main-nav-3" >			
+					<div class="main-nav-3-list">
+					<ul class="container">
+						<li><a target="../../module/chnlmonitor/chnlOverView.html">全景视图</a></li>
+						<li><a target="../../module/chnlmonitor/kpiOverView.html">指标视图</a></li>
+						<li><a target="../../module/chnlmonitor/chnlWarnOverView.html">预警视图</a></li>
+						<li><a target="../../module/map/mapDemo.html">地图Demo</a></li>
+					</ul>
+					</div> 
+					</div>
+	
+					<div class="main-nav-3">
+						<div class="main-nav-3-list">
+							<ul class="container">
+				<!-- 				<li><a target="../../module/chnlkpiinfo/chnlKpiInfoManager.html">指标项管理</a></li>
+								<li><a target="../../module/chnlstarchk/newBusiImport.html">业务指标数据导入</a></li>
+								<li><a target="../../module/chnlstarchk/chnlChkItemManager.html">行为考核管理</a></li>
+								<li><a target="../../module/chnlstarchk/chnlCalCfgDetail.html">星级评定配置</a></li>
+								<li><a target="../../module/chnlstarchk/chnlultichkstar.html">正式星级评定</a></li>
+								<li><a target="../../module/chnlstarchk/chnlchkstarsearch.html">星级评定综合查询</a></li> -->
+
+								<li><a target="../../module/chnlkpiinfo/chnlKpiInfoManager.html">指标项管理</a></li>
+								<li><a target="../../module/chnlstarchk/newBusiImport.html">业务指标数据导入</a></li>
+								<li><a target="../../module/report/KpiDecpReportDaily.html">指标考核日报表</a></li>
+								<li><a target="../../module/report/KpiDecpReportMon.html">指标考核月报表</a></li>
+								<li><a target="../../module/chnlkpiinfo/chnlKpiDecpCfgQry.html">集中考核管理</a></li>
+								<li><a target="../../module/chnlkpiinfo/chnlChkTplCfg.html">考核模板管理</a></li>
+								<li><a target="../../module/chnlkpiinfo/chnlKpiChkResultRpt.html">考核结果综合查询</a></li>
+								<li><a target="../../module/chnlassess/chnlAssessCfg.html">渠道评估配置</a></li>
+						<!-- 		<li><a target="../../module/chnlstarchk/chnlCalCfgDetail.html">星级评定配置</a></li>
+								<li><a target="../../module/chnlstarchk/chnlultichkstar.html">正式星级评定</a></li>
+								<li><a target="../../module/chnlstarchk/chnlchkstarsearch.html">星级评定综合查询</a></li>
+								<li><a target="../../module/chnlassess/chnlAssessCfg.html">渠道评估配置</a></li>
+								<li><a target="../../module/chnlassess/chnlAssessResultQry.html">渠道评估综合查询</a></li> -->
+							<!-- 	<li><a target="../../module/warn/WarnCfgManage.html">预警配置</a></li>
+								<li><a target="../../module/warn/WarnOrderManage.html">预警工单管理</a></li>
+								<li><a target="../../module/linkpage/EvaluationConfiguration.html">厅店评估配置</a></li>
+								<li><a target="../../module/linkpage/EvaluationDataImport.html">评估数据导入</a></li>
+								<li><a target="../../module/linkpage/BenefitAnalysis.html">效益分析</a></li>
+								<li><a target="../../module/linkpage/EfficiencyAnalysis.html">效率分析</a></li> -->
+							</ul>
+						</div>
+					</div>  
+					<div class="main-nav-3">
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li><a target="../../gzcm/chnlProfitAssess/chnlTxAssessDataUpload.html">厅效评估数据录入</a></li>
+								<li><a target="../../gzcm/chnlProfitAssess/chnlBenefitData.html">厅效评估数据修改</a></li>
+								<li><a target="../../gzcm/chnlProfitAssess/chnlTxFinanceCostExport.html">厅效评估明细下载</a></li>
+								<li><a target="../../gzcm/chnlProfitAssess/chnlBenefitInfo.html">单厅厅效评估结果</a></li>
+								<li><a target="../../gzcm/chnlProfitAssess/regionBenefitInfo.html">地市厅效评估结果</a></li>
+								<li><a target="../../gzcm/chnlProfitAssess/chnlTxLabelQry.html">厅效预警</a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="main-nav-3">
+						<div class="main-nav-3-list">
+							<ul class="container">
+								<li><a target="../../gzcm/chnlLevelAssessManage/gzChnlFirstPage.html">星级配置管理</a></li>
+								<li><a target="../../gzcm/chnlLevelAssessManage/gzChnlDataManage.html">星级数据管理</a></li>
+								<li><a target="../../gzcm/chnlLevelAssessManage/gzChnlRecommendStar.html">星级评定结果</a></li>
+								<li><a target="../../gzcm/chnlLevelAssessManage/gzChnlManage.html">星级管理</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div>
+	<iframe src="" frameborder="0" scrolling="no" id="myiframe" onload="this.height=100"></iframe> 	
+	</div>
+</body>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.main-nav-3-list li').click(function() {
+            var $this = $(this),
+            _clickTab = $this.find('a').attr('target'); 
+            //alert(_clickTab);
+            $("#myiframe").attr('src',_clickTab);
+            $this.addClass('current').siblings().removeClass('current');
+            $.get(_clickTab,function(data){
+                $('.doc-side-list ul').on('click', 'li a', hrefAnimate);
+            });
+        })
+
+        $('.main-nav > ul > li').click(function(){
+            $(".main-nav > ul > li").eq($(this).index()).addClass("current").siblings().removeClass('current');
+            $(".main-nav-2").hide().eq($(this).index()).show();
+        })
+        $('.main-nav-2 > ul > li').click(function(){
+            $(".main-nav-2 > ul > li").eq($(this).index()).addClass("current").siblings().removeClass('current');
+            $(".main-nav-3").hide().eq($(this).index()).show();
+        })
+        $('.main-nav-3 > ul > li').click(function(){
+            $(".main-nav-3 > ul > li").eq($(this).index()).addClass("current").siblings().removeClass('current');
+            $(".main-nav-4").hide().eq($(this).index()).show();
+        })
+
+        function hrefAnimate(){
+            $(this).parent("li").addClass('current').siblings("li").removeClass('current');
+            var anchor = $(this).attr('href');
+            var mao = $(anchor); //获得锚点
+            if (mao.length > 0) {//判断对象是否存在
+                var pos = mao.offset().top;
+                var poshigh = mao.height();
+                $("html,body").animate({scrollTop:pos}, 500);
+
+            }
+        }
+
+
+        $(window).scroll(function(){
+            var scrollTop = $(document).scrollTop();
+            var mainavHeight = $(".main-nav").height();
+            var menu = $(".doc-side-list");                      //定义变量，抓取#menu
+            var items = $(".doc-compontent-box");    //定义变量，查找.item
+            var curId = "";                             //定义变量，当前所在的楼层item #id
+            items.each(function(){
+                var m = $(this);                        //定义变量，获取当前类
+                var itemsTop = m.offset().top;        //定义变量，获取当前类的top偏移量
+                if(scrollTop > itemsTop-100){
+                    curId = "#" + m.attr("id");
+                }else{
+                    return false;
+                }
+            });
+            //给相应的楼层设置cur,取消其他楼层的cur
+            var curLink = menu.find(".current");
+            if( curId && curLink.attr("href") != curId ){
+                curLink.removeClass("current");
+                menu.find( "[href=" + curId + "]").parent("li").addClass("current");
+            }
+            if(scrollTop >= mainavHeight){
+                $(".doc-side-list").addClass("doc-side-list-fixed");
+            }else{
+                $(".doc-side-list").removeClass("doc-side-list-fixed");
+            }
+        });
+    });
+    
+   
+	function reinitIframe() {
+		var iframe = document.getElementById("myiframe");
+		try {
+			var bHeight = iframe.contentWindow.document.body.scrollHeight;
+			var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+			var height = Math.max(bHeight, dHeight);
+			iframe.height = height;
+		} catch (ex) {
+		}
+	}
+	window.setInterval("reinitIframe()", 200);
+</script>
+</html>

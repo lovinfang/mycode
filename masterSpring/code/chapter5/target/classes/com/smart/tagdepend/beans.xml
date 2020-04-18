@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+    <!-- 父<bean> 如果没有定义abstract="true" 那么Spring会创建一个abstractCar的实例Bean  -->
+    <bean id="abstractCar" class="com.smart.tagdepend.Car"
+          p:brand="红旗CA72" p:price="2000.00" p:color="黑色"
+          abstract="true"/>
+
+    <!-- 子bean 子类如果添加了父类的属性配置，则会覆盖父类设置的属性值-->
+    <bean id="car1" parent="abstractCar">
+        <property name="color" value="红色"/>
+    </bean>
+    <bean id="car2" parent="abstractCar" >
+        <property name="color" value="白色"/>
+    </bean>
+
+    <!-- cacheManager依赖于sysInit，所以在sysInit实例创建完之后才会创建cacheManager -->
+    <bean id="cacheManager" class="com.smart.tagdepend.CacheManager" depends-on="sysInit" />
+    <bean id="sysInit" class="com.smart.tagdepend.SysInit" />
+
+    <!-- <bean>引用 -->
+    <bean id="carasdasdas" class="com.smart.tagdepend.Car"/>
+    <bean id="boss" class="com.smart.tagdepend.Boss" >
+        <property name="carId"  >
+            <idref bean="carasdasdas"/>
+        </property>
+    </bean>
+</beans>

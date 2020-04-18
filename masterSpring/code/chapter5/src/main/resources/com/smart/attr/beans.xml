@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+         http://www.springframework.org/schema/util
+         http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+
+    <bean id="car" class="com.smart.attr.Car" lazy-init="default">
+        <property name="brand">
+            <value>  <!-- Spring空格换行也会注入到属性中 -->
+                <!--<![CDATA[红旗&CA72]]>-->
+                红旗&amp;CA72
+            </value>
+        </property>
+        <property name="maxSpeed">
+            <value>200</value>
+        </property>
+        <property name="price" value="2000.00" />
+    </bean>
+
+    <bean id="car1" class="com.smart.attr.Car">
+        <property name="brand"><null/></property>
+    </bean>
+
+    <bean id="boss1" class="com.smart.attr.Boss">
+        <property name="car">
+            <bean class = "com.smart.attr.Car">
+                <property name="maxSpeed" value="300"/>
+                <property name="price" value="15000"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!--级联属性设置 -->
+    <bean id="boss2" class="com.smart.attr.Boss">
+        <!-- 以圆点(.)的方式定义级联属性  要为BOSS类提供一个 setCar()的属性和方法 -->
+        <property name="car.brand" value="吉利CT50"/>
+    </bean>
+
+    <bean id="boss3" class="com.smart.attr.Boss">
+        <property name="car" ref="car" />
+        <property name="favoritesList">
+            <list>
+                <value>看报</value>
+                <value>赛车</value>
+                <value>高尔夫</value>
+            </list>
+        </property>
+        <property name="favoriteSet">
+            <set>
+                <value>足球</value>
+                <value>篮球</value>
+                <value>羽毛球</value>
+            </set>
+        </property>
+        <property name="jobs">
+            <map>
+                <entry >   <!-- 第一个map属性 -->
+                    <key>
+                        <value>AM</value>
+                    </key>
+                    <value>会见客户</value>
+                </entry>
+                <entry>    <!-- 第二个map属性 -->
+                    <key>
+                        <value>PM</value>
+                    </key>
+                    <value>公司内部会议</value>
+                </entry>
+            </map>
+        </property>
+        <property name="mails">   <!-- Properties集合属性 -->
+            <props>
+                <prop key="jobMail">john-office@smart.com</prop>
+                <prop key="lifeMail">john-life@smart.com</prop>
+            </props>
+        </property>
+        <property name="jobTime">  <!--Map<String, Integer> jobTime 强类型集合 -->
+            <map>
+                <entry>
+                    <key>
+                        <value>会见客户</value>
+                    </key>
+                    <value>124</value>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- 如果Map的key-value都是指向Bean，可以采用这种配置方法 -->
+    <bean id="keyBean" class="java.lang.String">
+       <constructor-arg value="keyv"/>
+    </bean>
+    <bean id="valueBean" class="java.lang.String">
+        <constructor-arg value="valuev"/>
+    </bean>
+    <bean id="boss4" class="com.smart.attr.Boss">
+        <property name="jobs">
+            <map>
+                <entry>
+                    <key><ref bean="keyBean"/> </key>
+                    <ref bean="valueBean"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- 父Bean -->
+    <bean id="parentBoss" abstract="true"
+          class="com.smart.attr.Boss">
+        <property name="favoriteSet">
+            <set>
+                <value>看报</value>
+                <value>赛车</value>
+                <value>高尔夫</value>
+            </set>
+        </property>
+    </bean>
+    <!-- 子Bean <set merge="true"> 那么子Bean的favoriteSet将拥有5个元素-->
+    <bean id="childBoss" parent="parentBoss">
+        <property name="favoriteSet">
+            <set merge="false">
+                <value>爬山</value>
+                <value>游泳</value>
+            </set>
+        </property>
+    </bean>
+
+    <!-- 通过util命名空间配置集合类型的Bean 需要引入Spring Util的xsd文件 -->
+    <util:list id="utilList" list-class="java.util.LinkedList">
+        <value>看报list</value>
+        <value>赛车list</value>
+        <value>高尔夫list</value>
+    </util:list>
+    <util:set id="utilSet">
+        <value>看报Set</value>
+        <value>赛车Set</value>
+        <value>高尔夫Set</value>
+    </util:set>
+    <util:map id="utilMap">
+        <entry key="AM" value="睡觉"/>
+        <entry key="PM" value="运动"/>
+    </util:map>
+</beans>

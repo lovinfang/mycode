@@ -1,0 +1,1056 @@
+package com.asiainfo.hicm.module.report.service.impl;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.apache.commons.httpclient.util.DateUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.net.ftp.FTPFile;
+
+import com.ai.appframe2.service.ServiceFactory;
+import com.asiainfo.cm.common.bo.BOBsParaDetailBean;
+import com.asiainfo.cm.common.constant.CMConstants;
+import com.asiainfo.cm.common.ivalues.IBOBsParaDetailValue;
+import com.asiainfo.cm.common.util.DateUtils;
+import com.asiainfo.cm.common.util.FtpUtil;
+import com.asiainfo.cm.common.util.ParaDetailUtil;
+import com.asiainfo.cm.common.util.ReportUtil;
+import com.asiainfo.cm.common.util.StringUtil;
+import com.asiainfo.cm.module.chnlkpiinfo.bo.BOChnlKpiInfoBean;
+import com.asiainfo.cm.module.chnlkpiinfo.service.interfaces.IChnlKpiManagerSV;
+import com.asiainfo.cm.module.dataprocess.bo.BOChnlTaskLogInfoBean;
+import com.asiainfo.cm.module.dataprocess.dao.interfaces.IChnlTaskLogInfoDAO;
+import com.asiainfo.cm.module.dataprocess.ivalues.IBOChnlTaskLogInfoValue;
+import com.asiainfo.cm.module.dataprocess.service.interfaces.IChnlTaskLogInfoSV;
+import com.asiainfo.cm.module.report.bo.BOChanKpiDailyBean;
+import com.asiainfo.cm.module.report.bo.BOChanKpiMonBean;
+import com.asiainfo.cm.module.report.bo.BOChannelInfoBean;
+import com.asiainfo.cm.module.report.bo.BORptEnumDataBean;
+import com.asiainfo.cm.module.report.dao.interfaces.IReportFileDownLoadDAO;
+import com.asiainfo.hicm.module.report.service.interfaces.IReportFileDownLoadHiSV;
+
+public class ReportFileDownLoadHiSVImpl implements IReportFileDownLoadHiSV {
+	protected final Log log = LogFactory.getLog(this.getClass().getName());
+
+	private static String reg = "^(-|[0-9])[0-9]*(\\.|[0-9]*)[0-9]*$";
+	private static String successFlag = "SUCCESSFLAG";
+	private static String fileFlag = "FILE";
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean reportMonDownLoad(String date,boolean isScanProc,String monFileType) throws Exception {
+		String error = CMConstants.REPORT_FILE_RESULT.DOWN_ERROR;
+		String errorDesc = "下载月文件数据入库失败!";
+		if(isScanProc){
+			error = CMConstants.REPORT_FILE_RESULT.SCAN_DOWN_ERROR;
+			errorDesc = "扫描修复下载月文件数据入库失败!";
+		}
+		BOChnlTaskLogInfoBean taskBean = new BOChnlTaskLogInfoBean();
+		taskBean.setTaskCode(CMConstants.REPORT_FILE_RESULT.MON_TASK_CODE+"_"+monFileType);
+		taskBean.setKpiDate(date);
+		try {
+			taskBean = (BOChnlTaskLogInfoBean) getTaskLogDao().qryChnlTaskLogInfoByBO(taskBean)[0];
+			Map kpiMap = this.rptKpiMonDownLoad(date,monFileType);//月指标数据
+			/*Map chnlMap = this.channelInfoDownLoad(date,"MONTH");//渠道信息数据
+*/			StringBuffer sb = new StringBuffer();
+			boolean kpiFlag = (Boolean) kpiMap.get(successFlag);
+			/*boolean chnlFlag = (Boolean) chnlMap.get(successFlag);*/
+			if(!kpiFlag){
+				sb.append("月指标错误数据:").append(CMConstants.REPORT_FILE_RESULT.LOG_KPI_DAILY.replace("YYYYMMDD", date)).append(";");
+			}
+			/*if(!chnlFlag){
+				sb.append("渠道信息错误数据:").append(CMConstants.REPORT_FILE_RESULT.LOG_CHANNEL.replace("YYYYMMDD", date)).append(";");
+			}*/
+//			if (kpiFlag && chnlFlag) {
+			if (kpiFlag) {
+				taskBean.setExeResult(CMConstants.REPORT_FILE_RESULT.DOWN_SUCCESS);
+				taskBean.setExeDesc("下载月文件数据入库成功!");
+				taskBean.setStackInfo("");
+				taskBean.setFileName("");
+			}else{
+				taskBean.setExeResult(CMConstants.REPORT_FILE_RESULT.DOWN_PART_SUCCESS);
+				taskBean.setExeDesc("下载月文件数据入库成功（部分错误数据未入库）!");
+				taskBean.setStackInfo("");
+				taskBean.setFileName(sb.toString());
+			}
+			taskBean.setStackInfo("");
+			taskBean.setModifyDate(new Timestamp(new Date().getTime()));
+			getTaskLogDao().modChnlTaskLogInfo(taskBean);
+			
+			//文件移历史目录
+			/*File kpiFile = (File) kpiMap.get(fileFlag);
+			File chnlFile = (File) chnlMap.get(fileFlag);
+			String now = DateUtil.formatDate(new Date(),"yyyyMMddhhmmss");
+			String kpiHis = kpiFile.getParent()+File.separator+"his"+File.separator+kpiFile.getName()+"_"+now;
+			String chnlHis = chnlFile.getParent()+File.separator+"his"+File.separator+chnlFile.getName()+"_"+now;
+			ReportUtil.moveFile(kpiFile, new File(kpiHis));
+			ReportUtil.moveFile(chnlFile, new File(chnlHis));*/
+			return true;
+		} catch (Exception e) {
+			log.error(errorDesc,e);
+			taskBean.setExeResult(error);
+			taskBean.setExeDesc(errorDesc);
+			taskBean.setStackInfo(e.getMessage());
+			taskBean.setModifyDate(new Timestamp(new Date().getTime()));
+			getTaskLogDao().modChnlTaskLogInfo(taskBean);
+			return false;
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean reportDailyDownLoad(String date,boolean isScanProc) throws Exception {
+		
+		
+		String error = CMConstants.REPORT_FILE_RESULT.DOWN_ERROR;
+		String errorDesc = "下载日文件数据入库失败!";
+		if(isScanProc){
+			error = CMConstants.REPORT_FILE_RESULT.SCAN_DOWN_ERROR;
+			errorDesc = "扫描修复下载日文件数据入库失败!";
+		}
+		BOChnlTaskLogInfoBean taskBean = new BOChnlTaskLogInfoBean();
+		taskBean.setTaskCode(CMConstants.REPORT_FILE_RESULT.DAILY_TASK_CODE);
+		taskBean.setKpiDate(date);
+		try {
+			taskBean = (BOChnlTaskLogInfoBean) getTaskLogDao().qryChnlTaskLogInfoByBO(taskBean)[0];
+			Map kpiMap = this.rptKpiDailyDownLoad(date);//日指标数据
+			/*Map enumMap = this.rptEnumDataDownLoad(date);//枚举值数据
+			Map chnlInfoMap = this.channelInfoDownLoad(date,"DAILY");//渠道信息数据
+*/			StringBuffer sb = new StringBuffer();
+			boolean kpiFlag = (Boolean) kpiMap.get(successFlag);
+			/*boolean enumFlag = (Boolean) enumMap.get(successFlag);
+			boolean chnlFlag = (Boolean) chnlInfoMap.get(successFlag);*/
+			if(!kpiFlag){
+				sb.append("日指标错误数据:").append(CMConstants.REPORT_FILE_RESULT.LOG_KPI_DAILY.replace("YYYYMMDD", date)).append(";");
+			}
+			/*if(!enumFlag){
+				sb.append("枚举值错误数据:").append(CMConstants.REPORT_FILE_RESULT.LOG_ENUM.replace("YYYYMMDD", date)).append(";");
+			}
+			if(!chnlFlag){
+				sb.append("渠道信息错误数据:").append(CMConstants.REPORT_FILE_RESULT.LOG_CHANNEL.replace("YYYYMMDD", date)).append(";");
+			}*/
+//			if(kpiFlag&&enumFlag&&chnlFlag){
+			if(kpiFlag){
+				taskBean.setExeResult(CMConstants.REPORT_FILE_RESULT.DOWN_SUCCESS);
+				taskBean.setExeDesc("下载日文件数据入库成功");
+				taskBean.setStackInfo("");
+				taskBean.setFileName("");
+			}else{
+				taskBean.setExeResult(CMConstants.REPORT_FILE_RESULT.DOWN_PART_SUCCESS);
+				taskBean.setExeDesc("下载日文件数据入库成功（部分错误数据未入库）!");
+				taskBean.setStackInfo("");
+				taskBean.setFileName(sb.toString());
+			}
+			taskBean.setModifyDate(new Timestamp(new Date().getTime()));
+			getTaskLogDao().modChnlTaskLogInfo(taskBean);
+			//文件移历史目录
+			/*File kpiFile = (File) kpiMap.get(fileFlag);
+			File enumFile = (File) enumMap.get(fileFlag);
+			File chnlFile = (File) chnlInfoMap.get(fileFlag);
+			String now = DateUtil.formatDate(new Date(),"yyyyMMddhhmmss");
+			String kpiHis = kpiFile.getParent()+File.separator+"his"+File.separator+kpiFile.getName()+"_"+now;
+			String enumHis = enumFile.getParent()+File.separator+"his"+File.separator+enumFile.getName()+"_"+now;
+			String chnlHis = chnlFile.getParent()+File.separator+"his"+File.separator+chnlFile.getName()+"_"+now;
+			ReportUtil.moveFile(kpiFile, new File(kpiHis));
+			ReportUtil.moveFile(enumFile, new File(enumHis));
+			ReportUtil.moveFile(chnlFile, new File(chnlHis));*/
+			return true;
+		} catch (Exception e) {
+			log.error(errorDesc,e);
+			taskBean.setExeResult(error);
+			taskBean.setExeDesc(errorDesc);
+			taskBean.setStackInfo(e.getMessage());
+			taskBean.setModifyDate(new Timestamp(new Date().getTime()));
+			getTaskLogDao().modChnlTaskLogInfo(taskBean);
+			return false;
+		}
+		
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public Map rptKpiMonDownLoad(String date,String monFileType) throws Exception {
+		
+		boolean delflag=true;
+		IBOBsParaDetailValue[] isdel = ParaDetailUtil.getParaDetailValues("X", CMConstants.REPORT_FILE_RESULT.KPI_FILE_REDOWN_MON_DEL, CMConstants.REPORT_FILE_RESULT.KPI_FILE_REDOWN_MON_DEL);
+		if(isdel != null && isdel.length > 0 && "0".equals(isdel[0].getPara1())){
+			delflag=false;
+		}
+		if(delflag==true){
+			log.error(">>>>>>删除入库月表数据");
+			String delsql = "delete from chan_kpi_mon where kpi_date = " + date;
+			getReportDao().deleteRptDataBySql(delsql);//清空渠道信息表数据
+		}
+		
+		
+		
+		log.error(">>>>>>开始指标月表文件[]");
+		boolean downSuccess = true;
+		String[] path = getFilePath();
+		String dataLogPath = path[1];//错误数据记录日志文件路径
+		String dataLogName = dataLogPath+File.separatorChar+CMConstants.REPORT_FILE_RESULT.LOG_KPI_MON.replace("YYYYMM", date);//LOG_KPI_MON_201411
+		File file = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_DATA_MON_CODE,monFileType,"ALL");
+		InputStream input = new FileInputStream(file);
+		BufferedReader br = null;
+		try {
+			
+			IChnlKpiManagerSV kpisv=(IChnlKpiManagerSV) ServiceFactory.getService(IChnlKpiManagerSV.class);
+			BOChnlKpiInfoBean[] kpiinfobeans=kpisv.qryChnlKpiInfosByCondition(" IS_PROCESS IN ('1','3') ", null, -1, -1);
+			Map<String,String> kpiinfomap=new HashMap<String, String>();
+			for(int i=0;i<kpiinfobeans.length;i++)
+				kpiinfomap.put(kpiinfobeans[i].getKpiId(), kpiinfobeans[i].getKpiId());
+			
+			br = new BufferedReader(new InputStreamReader(input,"UTF-8"));
+			String line = "";
+			List<BOChanKpiMonBean> beanList = new ArrayList<BOChanKpiMonBean>();
+			StringBuffer errMsgs = new StringBuffer();
+			int len = 0;
+			int listSize = 0;
+			int msgLen = errMsgs.length();
+			double kpi_value = 0;
+			while ((line = br.readLine()) != null) {
+				String[] strs = line.split(String.valueOf('#'), -1);
+				
+				if(StringUtil.isBlank(line.trim())||!kpiinfomap.containsKey(strs[2]))
+					continue;
+				
+				len++;
+				listSize++;
+				
+				BOChanKpiMonBean bean = new BOChanKpiMonBean();
+				StringBuffer errMsg = new StringBuffer();
+				this.check("kpi_date", strs[0].trim(), 10, errMsg, true, true);
+				this.check("follow_date", strs[1].trim(), 10, errMsg, true, false);
+				this.check("chan_kpi_id", strs[2].trim(), 10, errMsg, false, true);
+				this.check("city_id", strs[3].trim(), 6, errMsg, false, false);
+				this.check("county_id", strs[4].trim(), 6, errMsg, false, false);
+				this.check("org_id", strs[5].trim(), 20, errMsg, true, false);
+				this.check("brand_id", strs[6].trim(), 2, errMsg, false, false);
+				this.check("plan_id", strs[7].trim(), 20, errMsg, false, false);
+				this.check("lte_flag", strs[8].trim(), 1, errMsg, true, false);
+				this.check("open_type", strs[9].trim(), 20, errMsg, false, false);
+				this.check("user_type", strs[10].trim(), 20, errMsg, false, false);
+				this.check("flow_pkg_id", strs[11].trim(), 20, errMsg, false, false);
+				this.check("sell_type", strs[12].trim(), 20, errMsg, false, false);
+				this.check("ter_sy", strs[13].trim(), 20, errMsg, false, false);
+				this.check("ter_level", strs[14].trim(), 20, errMsg, false, false);
+				this.check("bandwidth_type", strs[15].trim(), 28, errMsg, false, false);
+				this.check("bandwidth", strs[16].trim(), 20, errMsg, false, false);
+				this.check("fusion_flag", strs[17].trim(), 1, errMsg, true, false);
+				this.check("etx_1", strs[18].trim(), 255, errMsg, false, false);
+				this.check("etx_2", strs[19].trim(), 255, errMsg, false, false);
+				this.check("ext_3", strs[20].trim(), 255, errMsg, false, false);
+				String value = strs[21].trim();
+				value = value.substring(1,value.length());
+				kpi_value = this.checkKpiValue(value, errMsg);
+				if(errMsg.length() > 0){
+					downSuccess = false;
+					errMsgs.insert(msgLen, "[" + DateUtils.date2String(new Date(),"yyyy-MM-dd hh:mm:ss,SSS") + "]  第"+len+"条数据错误(渠道编号="+strs[5]+") "+errMsg.toString()+"："+line+"\r");
+					msgLen = errMsgs.length();
+					if(msgLen > 1000000){
+						appendFile(dataLogName, errMsgs);
+						errMsgs = new StringBuffer();
+						msgLen = errMsgs.length();
+					}
+					listSize--;
+					continue;
+				}
+				bean.setKpiDate(strs[0].trim());//			kpi_date,
+				bean.setFollowDate(strs[1].trim());//            follow_date,
+				bean.setChanKpiId(strs[2].trim());//            chan_kpi_id,
+				bean.setCityId(strs[3].trim());//            city_id,
+				bean.setCountyId(strs[4].trim());//            county_id,
+				bean.setOrgId(strs[5].trim());//            org_id,
+				bean.setBrandId(strs[6].trim());//            brand_id,
+				bean.setPlanId(strs[7].trim());//            plan_id,
+				if(!StringUtil.isNull(strs[8].trim())){
+					bean.setLteFlag(Integer.parseInt(strs[8].trim()));//            flag_4g,
+				}
+				bean.setOpenType(strs[9].trim());//            open_type,
+				bean.setUserType(strs[10].trim());//            user_type,
+				bean.setFlowPkgId(strs[11].trim());//            flow_pkg_id,
+				bean.setSellType(strs[12].trim());//            sell_type,
+				bean.setTerSy(strs[13].trim());//            ter_sy,
+				bean.setTerLevel(strs[14].trim());//            ter_level,
+				bean.setBandwidthType(strs[15].trim());//            bandwidth_type
+				bean.setBandwidth(strs[16].trim());//            bandwidth,
+				if(!StringUtil.isNull(strs[17].trim())){
+					bean.setFusionFlag(Integer.parseInt(strs[17].trim()));//            fusion_flag,
+				}
+				bean.setExt1(strs[18].trim());//            etx_1,
+				bean.setExt2(strs[19].trim());//            etx_2,
+				bean.setExt3(strs[20].trim());//            ext_3,
+	        	bean.setKpiValue(kpi_value);//            kpi_value,
+				beanList.add(bean);
+				
+				if(listSize == 80000){
+					getReportDao().rptKpiMonSaveBatch(beanList.toArray(new BOChanKpiMonBean[beanList.size()]));
+					beanList = new ArrayList<BOChanKpiMonBean>();
+					listSize = 0;
+				}
+			}
+			if(errMsgs.length() > 0){
+				appendFile(dataLogName, errMsgs);
+				log.error("保存指标月表文件数据：存在错误数据——详细错误数据见日志" + dataLogName);
+			}
+			getReportDao().rptKpiMonSaveBatch(beanList.toArray(new BOChanKpiMonBean[beanList.size()]));
+			log.error("<<<<<<保存指标月表文件数据结束!");
+			Map map = new HashMap();
+			map.put(successFlag, downSuccess);
+			map.put(fileFlag, file);
+			return map;
+		} finally {
+			if(br != null){
+				br.close();
+			}
+			/*if(file.exists())
+				file.delete();*/
+		}
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public Map rptKpiDailyDownLoad(String date) throws Exception {
+		SimpleDateFormat sdf =new SimpleDateFormat("yyyyMMdd");
+		Date d=sdf.parse(date);
+		Calendar calendar = Calendar.getInstance(); 
+		calendar.setTime(d);
+		calendar.add(Calendar.DATE,-1);
+		
+		log.error(">>>>>>删除入库日表数据"+sdf.format(calendar.getTime()));
+		String delsql1 = "delete from chan_kpi_daily where kpi_date = " + sdf.format(calendar.getTime());
+		getReportDao().deleteRptDataBySql(delsql1);
+		
+		log.error(">>>>>>删除入库日表数据"+date);
+		String delsql2 = "delete from chan_kpi_daily where kpi_date = " + date;
+		getReportDao().deleteRptDataBySql(delsql2);
+		
+		/*log.error(">>>>>>开始处理指标日表文件[]");
+		StringBuffer sb = new StringBuffer();
+		sb.append(" kpi_date = '").append(date).append("'");
+		int count = getChanKpiDailyDao().getBeansCount(sb.toString());
+		if (count>0) {
+			String sql = "delete from chan_kpi_daily where kpi_date = '" + date + "'";
+			getReportDao().deleteRptDataBySql(sql);
+		}*/
+		boolean downSuccess = true;
+		String[] path = getFilePath();
+		String dataLogPath = path[1];//错误数据记录日志文件路径
+		String dataLogName = dataLogPath+File.separatorChar+CMConstants.REPORT_FILE_RESULT.LOG_KPI_DAILY.replace("YYYYMMDD", date);//LOG_KPI_DAILY_20141211
+		File file = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_DATA_DAILY_CODE,"","ALL");
+		InputStream input = new FileInputStream(file);
+		
+		BufferedReader br = null;
+		try {
+			IChnlKpiManagerSV kpisv=(IChnlKpiManagerSV) ServiceFactory.getService(IChnlKpiManagerSV.class);
+			BOChnlKpiInfoBean[] kpiinfobeans=kpisv.qryChnlKpiInfosByCondition(" IS_PROCESS IN ('1','3') ", null, -1, -1);
+			Map<String,String> kpiinfomap=new HashMap<String, String>();
+			for(int i=0;i<kpiinfobeans.length;i++)
+				kpiinfomap.put(kpiinfobeans[i].getKpiId(), kpiinfobeans[i].getKpiId());
+			
+			br = new BufferedReader(new InputStreamReader(input,"UTF-8"));
+			String line = "";
+			StringBuffer errMsgs = new StringBuffer();
+			int len = 0;
+			int msgLen = 0;
+			int listSize = 0;
+			double kpi_value = 0;
+			List<BOChanKpiDailyBean> beanList = new ArrayList<BOChanKpiDailyBean>();
+			while ((line = br.readLine()) != null) {
+				String[] strs = line.split(String.valueOf('#'), -1);
+				if(StringUtil.isBlank(line.trim())||!kpiinfomap.containsKey(strs[2]))
+					continue;
+				
+				len++;
+				listSize++;
+				
+				BOChanKpiDailyBean bean = new BOChanKpiDailyBean();
+				StringBuffer errMsg = new StringBuffer();
+				this.check("kpi_date", strs[0], 10, errMsg, true, true);
+				this.check("follow_date", strs[1], 8, errMsg, true, false);
+				this.check("chan_kpi_id", strs[2], 10, errMsg, false, true);
+				this.check("city_id", strs[3], 6, errMsg, false, false);
+				this.check("county_id", strs[4], 6, errMsg, false, false);
+				this.check("org_id", strs[5], 20, errMsg, true, false);
+				this.check("brand_id", strs[6], 2, errMsg, false, false);
+				this.check("plan_id", strs[7], 20, errMsg, false, false);
+				this.check("lte_flag", strs[8], 1, errMsg, true, false);
+				this.check("open_type", strs[9], 20, errMsg, false, false);
+				this.check("user_type", strs[10], 20, errMsg, false, false);
+				this.check("flow_pkg_id", strs[11], 20, errMsg, false, false);
+				this.check("sell_type", strs[12], 20, errMsg, false, false);
+				this.check("ter_sy", strs[13], 20, errMsg, false, false);
+				this.check("ter_level", strs[14], 20, errMsg, false, false);
+				this.check("bandwidth_type", strs[15], 28, errMsg, false, false);
+				this.check("bandwidth", strs[16], 20, errMsg, false, false);
+				this.check("fusion_flag", strs[17], 1, errMsg, true, false);
+				this.check("etx_1", strs[18], 255, errMsg, false, false);
+				this.check("etx_2", strs[19], 255, errMsg, false, false);
+				this.check("ext_3", strs[20], 255, errMsg, false, false);
+				String value = strs[21];
+				value = value.substring(1,value.length());
+				kpi_value = this.checkKpiValue(value, errMsg);
+				if (errMsg.length() > 0) {
+					downSuccess = false;
+					errMsgs.insert(msgLen, "[" + DateUtils.date2String(new Date(),"yyyy-MM-dd hh:mm:ss,SSS") + "]  第"+len+"条数据错误(渠道编号="+strs[5]+") "+errMsg.toString()+"："+line+"\r");
+					msgLen = errMsgs.length();
+					if(msgLen > 1000000){
+						appendFile(dataLogName,errMsgs);
+						errMsgs = new StringBuffer();
+						msgLen = errMsgs.length();
+					}
+					listSize--;
+					continue;
+				}
+				bean.setKpiDate(strs[0]);//			kpi_date,
+				bean.setFlowPkgId(strs[1]);//            follow_date,
+				bean.setChanKpiId(strs[2]);//            chan_kpi_id,
+				bean.setCityId(strs[3]);//            city_id,
+				bean.setCountyId(strs[4]);//            county_id,
+				bean.setOrgId(strs[5]);//            org_id,
+				bean.setBrandId(strs[6]);//            brand_id,
+				bean.setPlanId(strs[7]);//            plan_id,
+				if(!StringUtil.isNull(strs[8])){
+					bean.setLteFlag(Integer.parseInt(strs[8]));//            flag_4g,
+				}
+				bean.setOpenType(strs[9]);//            open_type,
+				bean.setUserType(strs[10]);//            user_type,
+				bean.setFlowPkgId(strs[11]);//            flow_pkg_id,
+				bean.setSellType(strs[12]);//            sell_type,
+				bean.setTerSy(strs[13]);//            ter_sy,
+				bean.setTerLevel(strs[14]);//            ter_level,
+				bean.setBandwidthType(strs[15]);//            bandwidth_type
+				bean.setBandwidth(strs[16]);//            bandwidth,
+				if(!StringUtil.isNull(strs[17])){
+					bean.setFusionFlag(Integer.parseInt(strs[17]));//            fusion_flag,
+				}
+				bean.setExt1(strs[18]);//            etx_1,
+				bean.setExt2(strs[19]);//            etx_2,
+				bean.setExt3(strs[20]);//            ext_3,
+				bean.setKpiValue(kpi_value);//            kpi_value,
+				beanList.add(bean);
+				if(listSize == 100000){
+					getReportDao().rptKpiDailySaveBatch(beanList.toArray(new BOChanKpiDailyBean[beanList.size()]));
+					beanList.clear();
+					listSize = 0;
+				}
+			}
+			if(errMsgs.length() > 0){
+				appendFile(dataLogName, errMsgs);
+				log.error("保存指标日表文件数据：存在错误数据——详细错误数据见日志"+dataLogName);//+upLogName
+			}
+			getReportDao().rptKpiDailySaveBatch(beanList.toArray(new BOChanKpiDailyBean[beanList.size()]));
+			log.error("<<<<<<保存指标日表文件数据结束!");
+			Map map = new HashMap();
+			map.put(successFlag, downSuccess);
+			map.put(fileFlag, file);
+			return map;
+		} finally {
+			if(br != null){
+				br.close();
+			}
+			/*if(file.exists())
+				file.delete();*/
+		}
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public Map rptEnumDataDownLoad(String date) throws Exception {
+		log.error(">>>>>>开始处理枚举值表文件[]");
+		boolean downSuccess = true;
+		String sql = "delete from rpt_enum_data ";
+		getReportDao().deleteRptDataBySql(sql);//先清空枚举值表数据
+
+		String[] path = getFilePath();
+		String dataLogPath = path[1];//错误数据记录日志文件路径
+		String dataLogName = dataLogPath+File.separatorChar+CMConstants.REPORT_FILE_RESULT.LOG_ENUM.replace("YYYYMM", date);//LOG_ENUM_DATA_20141211
+		File file = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_ENUM_CODE,"","");
+		InputStream input = new FileInputStream(file);
+
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new InputStreamReader(input,"UTF-8"));
+			String line = "";
+			StringBuffer errMsgs = new StringBuffer();
+			int len = 0;
+			int listSize = 0;
+			int msgLen = 0;
+			List<BORptEnumDataBean> beanList = new ArrayList<BORptEnumDataBean>();
+			while ((line = br.readLine()) != null) {
+				if(StringUtil.isBlank(line.trim()))
+					continue;
+				len++;
+				listSize++;
+				String[] strs = line.split(String.valueOf('#'), -1);
+				BORptEnumDataBean bean = new BORptEnumDataBean();
+				StringBuffer errMsg = new StringBuffer();
+				this.check("code_value", strs[0], 255, errMsg, false, false);
+				this.check("code_name", strs[1], 255, errMsg, false, false);
+				this.check("code_type", strs[2], 255, errMsg, false, false);
+				this.check("code_desc", strs[3], 255, errMsg, false, false);
+				this.check("ext_1", strs[4], 255, errMsg, false, false);
+				this.check("ext_2", strs[5], 255, errMsg, false, false);
+				bean.setCodeValue(strs[0]);
+				bean.setCodeName(strs[1]);
+				bean.setCodeType(strs[2]);
+				bean.setCodeDesc(strs[3]);
+				bean.setExt1(strs[4]);
+				bean.setExt2(strs[5]);
+				bean.setState("U");
+	
+				if(errMsg.length() > 0){
+					downSuccess = false;
+					errMsgs.insert(msgLen, "[" + DateUtils.date2String(new Date(),"yyyy-MM-dd hh:mm:ss,SSS") + "]  第"+len+"条数据错误 "+errMsg.toString()+"："+line+"\r");
+					msgLen = errMsgs.length();
+					listSize--;
+					continue;
+				}
+				beanList.add(bean);
+	
+				if(listSize == 100000){
+					getReportDao().rptEnumDataSaveBatch(beanList.toArray(new BORptEnumDataBean[beanList.size()]));
+					beanList.clear();
+					listSize = 0;
+				}
+			}
+			if(errMsgs.length() > 0){
+				appendFile(dataLogName, errMsgs);
+				log.error("保存枚举值表文件数据失败：存在错误数据——详细错误数据见日志" + dataLogName);
+			}
+			getReportDao().rptEnumDataSaveBatch(beanList.toArray(new BORptEnumDataBean[beanList.size()]));
+			log.error("<<<<<<保存枚举值表文件数据结束!");
+			Map map = new HashMap();
+			map.put(successFlag, downSuccess);
+			map.put(fileFlag, file);
+			return map;
+		} finally {
+			if(br != null){
+				br.close();
+			}
+		}
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public Map channelInfoDownLoad(String date,String fileType)throws Exception {
+		log.error(">>>>>>开始处理渠道信息表文件[]");
+		boolean downSuccess = true;
+		int flag = 1;
+		File file = null;
+		if("DAILY".equals(fileType)){
+			flag = 1;
+			file = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_CHNL_DAILY_CODE,"","");
+		}else if("MONTH".equals(fileType)){
+			flag = 0;
+			file = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_CHNL_MON_CODE,fileType,"");
+		}
+
+		String sql = "delete from channel_info where channel_flag = " + flag;
+		getReportDao().deleteRptDataBySql(sql);//清空渠道信息表数据
+
+		String[] path = getFilePath();
+		String dataLogPath = path[1];//错误数据记录日志文件路径
+		String dataLogName = dataLogPath+File.separatorChar+CMConstants.REPORT_FILE_RESULT.LOG_CHANNEL.replace("YYYYMMDD", date);//LOG_CHANNEL_INFO_20141211/201412
+
+		InputStream input = new FileInputStream(file);
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new InputStreamReader(input,"UTF-8"));
+			StringBuffer errMsgs = new StringBuffer();
+			int len = 0;
+			int listSize = 0;
+			int msgLen = 0;
+			String line = "";
+			List<BOChannelInfoBean> beanList = new ArrayList<BOChannelInfoBean>();
+			while ((line = br.readLine()) != null) {
+				if(StringUtil.isBlank(line.trim()))
+					continue;
+				len++;
+				String[] strs = line.split(String.valueOf('#'), -1);
+				BOChannelInfoBean bean = new BOChannelInfoBean();
+				StringBuffer errMsg = new StringBuffer();
+				
+				listSize++;
+				this.check("CHANNEL_ID", strs[0], 12, errMsg, true, true);
+				this.check("CHANNEL_NAME", strs[1], 100, errMsg, false, false);
+				this.check("REGION_CODE", strs[2], 8, errMsg, false, true);
+				this.check("COUNTY_CODE", strs[3], 8, errMsg, false, true);
+				this.check("CHANNEL_ADDRESS", strs[4], 255, errMsg, false, false);
+				this.check("OPERATE_TYPE", strs[5], 1, errMsg, false, false);
+				this.check("CHANNEL_TOTAL_NAME", strs[6], 255, errMsg, false, false);
+				this.check("CHANNEL_TYPE", strs[7], 8, errMsg, true, false);
+				this.check("CHANNEL_TYPE_NAME", strs[8], 255, errMsg, false, false);
+				this.check("CHANNEL_TYPE_DTL", strs[9], 8, errMsg, true, false);
+				this.check("CHANNEL_TYPE_DTL_NAME", strs[10], 255, errMsg, false, false);
+				this.check("CHANNEL_TYPE_DTL3", strs[11], 8, errMsg, true, false);
+				this.check("CHANNEL_TYPE_DTL3_NAME", strs[12], 255, errMsg, false, false);
+				this.check("PARENT_CHANNEL_ID", strs[13], 8, errMsg, true, true);
+				this.check("PARENT_CHANNEL_NAME", strs[14], 255, errMsg, false, false);
+				this.check("ZONE_ID", strs[15], 8, errMsg, true, false);
+				this.check("ZONE_NAME", strs[16], 255, errMsg, false, false);
+				this.check("BUSI_CIRCLE_ID", strs[17], 8, errMsg, true, false);
+				this.check("BUSI_CIRCLE_NAME", strs[18], 255, errMsg, false, false);
+				this.check("BUSI_CIRCLE_LEVEL", strs[19], 8, errMsg, true, false);
+				this.check("BUSI_CIRCLE_TYPE", strs[20], 20, errMsg, false, false);
+				this.check("MANAGER_ID", strs[21], 12, errMsg, true, false);
+				this.check("MANAGER_NAME", strs[22], 255, errMsg, false, false);
+				this.check("IS_TERMINAL", strs[23], 1, errMsg, false, false);
+				this.check("CHANNEL_LEVEL", strs[24], 2, errMsg, true, false);
+				this.check("IS_SPECIALIZED", strs[25], 1, errMsg, false, false);
+				this.check("CHAIN_ORG_TYPE", strs[26], 255, errMsg, false, false);
+				this.check("CHAIN_COUNTY_ORG_NAME", strs[27], 255, errMsg, false, false);
+				this.check("CHAIN_PROV_ORG_NAME", strs[28], 255, errMsg, false, false);
+				this.check("CHAIN_CITY_ORG_NAME", strs[29], 255, errMsg, false, false);
+				this.check("CHANNEL_STATUS", strs[30], 2, errMsg, true, true);
+				if(errMsg.length() > 0){
+					downSuccess = false;
+					errMsgs.insert(msgLen, "[" + DateUtils.date2String(new Date(),"yyyy-MM-dd hh:mm:ss,SSS") + "]  第"+len+"条数据错误(渠道编号="+strs[0]+") "+errMsg.toString()+"："+line+"\r");
+					msgLen = errMsgs.length();
+					if(msgLen > 1000000){
+						appendFile(dataLogName, errMsgs);
+						errMsgs = new StringBuffer();
+						msgLen = errMsgs.length();
+					}
+					listSize--;
+					continue;
+				}
+				if(!StringUtil.isNull(strs[0])){
+					bean.setChannelId(Long.parseLong(strs[0]));
+				}
+				bean.setChannelName(strs[1]);
+				bean.setRegionCode(strs[2]);
+				bean.setCountyCode(strs[3]);
+				bean.setChannelAddress(strs[4]);
+				bean.setOperateType(strs[5]);
+				bean.setChannelTotalName(strs[6]);
+				if(!StringUtil.isNull(strs[7])){
+					bean.setChannelType(Long.parseLong(strs[7]));
+				}
+				bean.setChannelTypeName(strs[8]);
+				if(!StringUtil.isNull(strs[9])){
+					bean.setChannelTypeDtl(Long.parseLong(strs[9]));
+				}
+				bean.setChannelTypeDtlName(strs[10]);
+				if(!StringUtil.isNull(strs[11])){
+					bean.setChannelTypeDtl3(Long.parseLong(strs[11]));
+				}
+				bean.setChannelTypeDtl3Name(strs[12]);
+				if(!StringUtil.isNull(strs[13])){
+					bean.setParentChannelId(Long.parseLong(strs[13]));
+				}
+				bean.setParentChannelName(strs[14]);
+				if(!StringUtil.isNull(strs[15])){
+					bean.setZoneId(Long.parseLong(strs[15]));
+				}
+				bean.setZoneName(strs[16]);
+				if(!StringUtil.isNull(strs[17])){
+					bean.setBusiCircleId(Long.parseLong(strs[17]));
+				}
+				bean.setBusiCircleName(strs[18]);
+				if(!StringUtil.isNull(strs[19])){
+					bean.setBusiCircleLevel(Integer.parseInt(strs[19]));
+				}
+				bean.setBusiCircleType(strs[20]);
+				if(!StringUtil.isNull(strs[21])){
+					bean.setManagerId(Long.parseLong(strs[21]));
+				}
+				bean.setManagerName(strs[22]);
+				bean.setIsTerminal(strs[23]);
+				if(!StringUtil.isNull(strs[24])){
+					bean.setChannelLevel(Integer.parseInt(strs[24]));
+				}
+				bean.setIsSpecialized(strs[25]);
+				if(!StringUtil.isNull(strs[26])){
+					if("全省级".equals(strs[24])){
+						bean.setChainOrgType(0);
+					}else if("地市级".equals(strs[24])){
+						bean.setChainOrgType(1);
+					}else if("全国级".equals(strs[24])){
+						bean.setChainOrgType(2);
+					}
+				}
+				bean.setChainCountyOrgName(strs[27]);
+				bean.setChainProvOrgName(strs[28]);
+				bean.setChainCityOrgName(strs[29]);
+				if(!StringUtil.isNull(strs[30])){
+					bean.setChannelStatus(Integer.parseInt(strs[30]));
+				}
+				if(!StringUtil.isNull(strs[31])){
+					if(strs[31].length()>10){
+						bean.setCreateDate(DateUtils.formatDate(strs[31].substring(0,10), "yyyy-MM-dd", "yyyyMMdd"));
+					}else{
+						bean.setCreateDate(DateUtils.formatDate(strs[31], "yyyy-MM-dd", "yyyyMMdd"));
+					}
+				}
+				if(!StringUtil.isNull(strs[32])){
+					if(strs[32].length()>10){
+						bean.setDoneDate(DateUtils.formatDate(strs[32].substring(0,10), "yyyy-MM-dd", "yyyyMMdd"));
+					}else{
+						bean.setDoneDate(DateUtils.formatDate(strs[32], "yyyy-MM-dd", "yyyyMMdd"));
+					}
+				}
+				bean.setKpiDate(date);
+				bean.setChannelFlag(flag);
+				beanList.add(bean);
+	
+				if(listSize == 100000){
+					getReportDao().channelInfoSaveBatch(beanList.toArray(new BOChannelInfoBean[beanList.size()]));
+					beanList.clear();
+					listSize = 0;
+				}
+			}
+			if(errMsgs.length() > 0){
+				appendFile(dataLogName, errMsgs);
+				log.error("保存渠道信息文件数据：存在错误数据——详细错误数据见日志" + dataLogName);
+			}
+			getReportDao().channelInfoSaveBatch(beanList.toArray(new BOChannelInfoBean[beanList.size()]));
+			log.error("<<<<<<保存渠道信息文件数据结束");
+			Map map = new HashMap();
+			map.put(successFlag, downSuccess);
+			map.put(fileFlag, file);
+			return map;
+		} finally {
+			if(br != null){
+				br.close();
+			}
+		}
+	}
+	
+	@Override
+	public boolean checkFileExist(String date,String monFileType) throws Exception{
+		boolean flag = true;
+		String taskCode = ""; 
+		StringBuffer sb = new StringBuffer();
+		if(date.length() == 6){
+			taskCode = CMConstants.REPORT_FILE_RESULT.MON_TASK_CODE+"_"+monFileType;
+			File kpiMonFile = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_DATA_MON_CODE,monFileType,"",CMConstants.REPORT_FILE_RESULT.KPI_FILE_REPORT_DAILY);
+			/*File chnlMonFile = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_CHNL_MON_CODE,"","");*/
+			
+			if(!kpiMonFile.exists()){
+				sb.append(kpiMonFile.getPath()).append(";");
+				flag = false;
+			}
+			/*if(!chnlMonFile.exists()){
+				sb.append(chnlMonFile.getPath()).append(";");
+				flag = false;
+			}*/
+			//if(!"STAR".equals(monFileType)){
+//				File QDFX_kpiMonFile = getFile(date,CMConstants.REPORT_FILE_RESULT.QDXF_DATA_MON_CODE,monFileType,"");
+//				if(!QDFX_kpiMonFile.exists()){
+//					sb.append(QDFX_kpiMonFile.getPath()).append(";");
+//					flag = false;
+//				}
+				if(flag){
+					String[] files=new String[1];
+					files[0]=kpiMonFile.getPath();
+//					files[1]=QDFX_kpiMonFile.getPath();
+					mergeFiles(kpiMonFile.getPath()+"_ALL",files);
+				}
+			//}
+			
+		}else{
+			taskCode = CMConstants.REPORT_FILE_RESULT.DAILY_TASK_CODE;
+			File kpiDailyFile = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_DATA_DAILY_CODE,"","");
+			/*File enumFile = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_ENUM_CODE,"","");
+			File chnlDailyFile = getFile(date,CMConstants.REPORT_FILE_RESULT.KPI_CHNL_DAILY_CODE,"","");*/
+//			File QDFX_kpiDailyFile = getFile(date,CMConstants.REPORT_FILE_RESULT.QDXF_DATA_DAILY_CODE,monFileType,"");
+			if(!kpiDailyFile.exists()){
+				sb.append(kpiDailyFile.getPath()).append(";");
+				flag = false;
+			}
+			/*if(!enumFile.exists()){
+				sb.append(enumFile.getPath()).append(";");
+				flag = false;
+			}
+			if(!chnlDailyFile.exists()){
+				sb.append(chnlDailyFile.getPath()).append(";");
+				flag = false;
+			}*/
+//			if(!QDFX_kpiDailyFile.exists()){
+//				sb.append(QDFX_kpiDailyFile.getPath()).append(";");
+//				flag = false;
+//			}
+			if(flag){
+				String[] files=new String[1];
+				files[0]=kpiDailyFile.getPath();
+//				files[1]=QDFX_kpiDailyFile.getPath();
+				mergeFiles(kpiDailyFile.getPath()+"_ALL",files);
+			}
+		}
+		IChnlTaskLogInfoSV taskLogSV = (IChnlTaskLogInfoSV) ServiceFactory.getService(IChnlTaskLogInfoSV.class);
+		BOChnlTaskLogInfoBean taskBean = new BOChnlTaskLogInfoBean();
+		taskBean.setTaskCode(taskCode);
+		taskBean.setKpiDate(date);
+		IBOChnlTaskLogInfoValue[] taskLog = getTaskLogDao().qryChnlTaskLogInfoByBO(taskBean);
+		if(taskLog.length > 0 && CMConstants.REPORT_FILE_RESULT.NO_FILE.equals(taskLog[0].getExeResult())){
+			if(flag){
+				taskLog[0].setExeResult(CMConstants.REPORT_FILE_RESULT.INIT);
+				taskLog[0].setExeDesc("文件数据入库初始化，等待解析入库");
+				taskLog[0].setModifyDate(new Timestamp(new Date().getTime()));
+				taskLogSV.modChnlTaskLogInfo((BOChnlTaskLogInfoBean) taskLog[0]);
+			}else{
+				taskLog[0].setExeResult(CMConstants.REPORT_FILE_RESULT.NO_FILE);
+				taskLog[0].setExeDesc("数据文件不存在["+sb.toString()+"]");
+				taskLog[0].setModifyDate(new Timestamp(new Date().getTime()));
+				taskLogSV.modChnlTaskLogInfo((BOChnlTaskLogInfoBean) taskLog[0]);
+			}
+		}
+		if((taskLog.length <=0 || taskLog == null)){
+			if(flag){
+				BOChnlTaskLogInfoBean intBean = new BOChnlTaskLogInfoBean();
+				intBean.setTaskCode(taskCode);
+				intBean.setKpiDate(date);
+				intBean.setTaskName("指标数据处理任务");
+				intBean.setExeResult(CMConstants.REPORT_FILE_RESULT.INIT);//初始化
+				intBean.setExeDesc("文件数据入库初始化，等待解析入库");
+				intBean.setCreateDate(new Timestamp(new Date().getTime()));
+				taskLogSV.addChnlTaskLogInfo(intBean);
+			}else{
+				BOChnlTaskLogInfoBean intBean = new BOChnlTaskLogInfoBean();
+				intBean.setTaskCode(taskCode);
+				intBean.setKpiDate(date);
+				intBean.setTaskName("指标数据处理任务");
+				intBean.setExeResult(CMConstants.REPORT_FILE_RESULT.NO_FILE);
+				intBean.setExeDesc("数据文件不存在["+sb.toString()+"]");
+				intBean.setCreateDate(new Timestamp(new Date().getTime()));
+				taskLogSV.addChnlTaskLogInfo(intBean);
+			}
+		}
+		return flag;
+	}
+	
+	public static final int BUFSIZE = 1024 * 8;
+	@Override
+	public void mergeFiles(String outFile, String[] files) {  
+		
+		File outfile=new File(outFile);
+		if(outfile.exists())
+			outfile.delete();
+        FileChannel outChannel = null;  
+        log.error("合并： " + Arrays.toString(files) + " 到 " + outFile);
+        
+        try {  
+            outChannel = new FileOutputStream(outFile).getChannel();  
+            for(String f : files){  
+                FileChannel fc = new FileInputStream(f).getChannel();   
+                ByteBuffer bb = ByteBuffer.allocate(BUFSIZE);  
+                while(fc.read(bb) != -1){  
+                    bb.flip();  
+                    outChannel.write(bb);  
+                    bb.clear();  
+                }  
+                
+                bb.put("\r\n".getBytes());
+                bb.flip();  
+                outChannel.write(bb);  
+                bb.clear();
+                
+                fc.close();
+            }  
+            log.error("合并完成!! ");  
+        } catch (IOException ioe) {  
+        	 log.error(ioe.getMessage());  
+        } finally {  
+            try {if (outChannel != null) {outChannel.close();}} catch (IOException ignore) {}  
+        }  
+    }  
+	
+	public File getFile(String date,String fileCode,String monFileType,String fileType,String ftpcode) throws Exception{
+		String[] path = this.getFilePath();
+		BOBsParaDetailBean bsBean = null;
+		bsBean=getBsParaDetailValueByCode(fileCode);
+		String fileName = "";
+		if (CMConstants.REPORT_FILE_RESULT.KPI_DATA_DAILY_CODE.equals(fileCode)
+				|| CMConstants.REPORT_FILE_RESULT.KPI_ENUM_CODE.equals(fileCode)
+				|| CMConstants.REPORT_FILE_RESULT.KPI_CHNL_DAILY_CODE.equals(fileCode)) {
+			fileName = bsBean.getPara1().replaceAll("YYYYMMDD", date);
+		}else if(CMConstants.REPORT_FILE_RESULT.KPI_DATA_MON_CODE.equals(fileCode)
+				|| CMConstants.REPORT_FILE_RESULT.KPI_CHNL_MON_CODE.equals(fileCode)){
+			
+			if(CMConstants.REPORT_FILE_RESULT.KPI_DATA_MON_CODE.equals(fileCode)){
+				/*if("STAR".equals(monFileType))
+					fileName = bsBean.getPara1().replaceAll("YYYYMM", date);
+				else
+					fileName = bsBean.getPara2().replaceAll("YYYYMM", date);*/
+				fileName = bsBean.getPara1().replaceAll("YYYYMM", date);
+			}else{
+				fileName = bsBean.getPara1().replaceAll("YYYYMM", date);
+			}
+		}
+		
+		//获取文件入库时加ALL
+		//if("ALL".equals(fileType)&&!"STAR".equals(monFileType))
+//		if("ALL".equals(fileType))
+//			fileName=fileName+"_ALL";
+		
+		File file = new File(path[0].replace('/', File.separatorChar)+File.separatorChar+fileName);
+		//先判断ftp上是否存在此文件
+		FtpUtil ftp = new FtpUtil(ftpcode);
+		InputStream in = null;
+		log.info("begin handle ftp file:" + ftpcode);
+		String[] fs = ftp.list();
+		if(null != fs){
+			for(String s : fs){
+				if(fileName.equals(s)){
+					OutputStream os = null;
+					try{
+						log.debug("ftp服务器上存在此此文件");
+						in = ftp.readRemote(s);
+						byte buffer[] = new byte[4*1024];
+						os = new FileOutputStream(file);
+						while(in.read(buffer) != -1){
+							os.write(buffer);
+						}
+						os.flush();
+					}catch(Exception e){
+						e.printStackTrace();
+					}finally{
+						os.close();
+					}
+				}
+			}
+		}
+		return file;
+	}
+	/**
+	 * 
+	 * <p>
+	 * Description: 校验字段值
+	 * </p>
+	 * @param strName 字段名称
+	 * @param strValue 字段值
+	 * @param len 限制长度
+	 * @param errMsg 错误信息
+	 * @param isNum 是否数字
+	 * @param isNotNull 是否可为空
+	 * @return
+	 * @author: mahj3
+	 * @date: 2014年11月25日 上午9:41:12
+	 */
+	private String check(String strName, String strValue, int len, StringBuffer errMsg, boolean isNum, boolean isNotNull){
+		if (!isNotNull && StringUtil.isNull(strValue)) {
+			return "";
+		}
+		if (isNotNull && StringUtil.isNull(strValue)) {
+			errMsg.append("字段[").append(strName).append("=").append(strValue).append("]不能为空;");
+			return "";
+		}
+		if (strValue.length() > len) {
+			errMsg.append("字段[").append(strName).append("=").append(strValue).append("]长度超长，不能超过(").append(len).append(")位;");
+		}
+		if (isNum && !Pattern.compile("^\\d+$").matcher(strValue).find()) {
+			errMsg.append("字段[").append(strName).append("=").append(strValue).append("]不是正确数字;");
+		}
+		return "";
+	}
+	/**
+	 * 校验kpi_value并返回
+	 */
+	private double checkKpiValue(String kpiValue,StringBuffer errMsg){
+		if(StringUtil.isNull(kpiValue)){
+			return 0;
+		}
+		if(".".equals(kpiValue.substring(0,1))){
+			kpiValue = "0"+kpiValue;
+		}
+		if (!Pattern.compile(reg).matcher(kpiValue).find()) {
+			errMsg.append("字段[KPI_VALUE=").append(kpiValue).append("]不是正确数字;");
+			return 0;
+		}
+		double dou = Double.parseDouble(kpiValue);
+		BigDecimal bg = new BigDecimal(dou);
+		double value = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();//小数点后超出两位，保留两位小数
+		return value;
+	}
+	/**
+	 * 
+	 * <p>
+	 * Description: 记录错误数据日志
+	 * </p>
+	 * @param fileName
+	 * @param errMsgs
+	 * @return
+	 * @throws Exception
+	 * @author: mahj3
+	 * @date: 2014年11月25日 上午9:37:12
+	 *
+	 */
+	private boolean appendFile(String fileName,StringBuffer errMsgs) throws Exception{
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(new String(fileName.getBytes(),"UTF-8"),true);
+			out.write(errMsgs.toString().getBytes("UTF-8"));
+			out.flush();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new Exception("写错误数据记录日志发生错误:"+e.getMessage());
+		} finally{
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+	/**
+	 * 
+	 * <p>
+	 * Description: 获得数据文件路径以及错误数据记录日志的路径
+	 * </p>
+	 * @return
+	 * @throws Exception
+	 * @author: mahj3
+	 * @date: 2014年11月28日 上午9:59:19
+	 */
+	private String[] getFilePath() throws Exception{
+
+		IBOBsParaDetailValue value = getBsParaDetailValueByCode(CMConstants.REPORT_FILE_RESULT.KPI_FILE_DIR_CODE);
+		
+		return new String[]{value.getPara1(),value.getPara2()};
+	}
+	
+	private BOBsParaDetailBean getBsParaDetailValueByCode(String paraCode) throws Exception {
+		IBOBsParaDetailValue[] value = ParaDetailUtil.getParaDetailValues("X", CMConstants.REPORT_FILE_RESULT.KPI_FILE_DOWNLOAD_TYPE, paraCode);
+		return (BOBsParaDetailBean)value[0];
+	}
+	
+	private IReportFileDownLoadDAO getReportDao() {
+		return (IReportFileDownLoadDAO) ServiceFactory.getService(IReportFileDownLoadDAO.class);
+	}
+	
+	private IChnlTaskLogInfoDAO getTaskLogDao() {
+		return (IChnlTaskLogInfoDAO) ServiceFactory.getService(IChnlTaskLogInfoDAO.class);
+	}
+
+	@Override
+	public File getFile(String date, String fileCode, String monFileType,
+			String fileType) throws Exception {
+		return null;
+	}
+
+}

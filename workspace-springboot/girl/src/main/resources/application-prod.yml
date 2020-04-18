@@ -1,0 +1,16 @@
+server:
+  port: 8082
+  servlet:
+   context-path: /girl
+
+################分开写每一个配置 BEGIN###################
+cupSize: B
+age: 18
+content: "cupSize: ${cupSize},age:${age}"
+################分开写每一个配置 END###################
+
+################配置一个girl的属性 BEGIN###################
+girl:
+  cupSize: F
+  age: 18
+################配置一个girl的属性 END###################

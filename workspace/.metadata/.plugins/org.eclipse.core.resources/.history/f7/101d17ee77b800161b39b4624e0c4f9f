@@ -1,0 +1,58 @@
+package com.asiainfo.hicm.ext.oa.test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.namespace.QName;
+import javax.xml.rpc.ParameterMode;
+import javax.xml.rpc.ServiceException;
+
+import org.apache.axis.client.Call;
+import org.apache.axis.client.Service;
+import org.apache.axis.encoding.XMLType;
+
+
+
+public class TestWebserviceOA {
+
+	public static List getWebServiceDataOfJava(SystemBean sysBean,String userId,String rows){
+		List res=new ArrayList();
+		try {
+			String endPoint = sysBean.getWsdlurl();
+			Service service = new Service();
+			Call call=(Call) service.createCall();
+			call.setTargetEndpointAddress(new java.net.URL(endPoint));
+			QName qn=new QName(sysBean.getTargetnamespace(),sysBean.getMethodname());
+			call.setTimeout(Integer.parseInt(sysBean.getTimeout()==null?"5000":sysBean.getTimeout()));
+			call.setOperationName(qn);
+			call.addParameter("StaffId", XMLType.XSD_STRING, ParameterMode.IN);
+			call.addParameter("rows", XMLType.XSD_STRING, ParameterMode.IN);
+			call.setReturnType(new QName(sysBean.getTargetnamespace(),sysBean.getMethodname()),String.class);
+			res = (List)call.invoke(new Object[]{userId,rows});
+			if( res !=null && res.size()>0){
+			 if(res.get(0).toString().equals("2")){
+				 throw new Exception(sysBean.getSysname()+"访问口令出错");
+			 }else if(res.get(0).toString().equals("3")){
+				 throw new Exception(sysBean.getSysname()+"获取查询出错");
+			 }else if(res.get(0).toString().equals("4")){
+				 throw new Exception(sysBean.getSysname()+"系统中没有该人员");
+			 }
+			}else{
+			res=new ArrayList();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static void main(String[] args) {
+		TestWebserviceOA test = new TestWebserviceOA();
+		SystemBean sysbean = new SystemBean();
+		sysbean.setWsdlurl("http://127.0.0.1:8081/axis2/services/imptDealWrokServices?wsdl");
+		sysbean.setTargetnamespace("http://127.0.0.1:8081/axis2/services/imptDealWrokServices");
+		sysbean.setMethodname("getImptDealWrok");
+		sysbean.setTimeout("6000");
+		test.getWebServiceDataOfJava(sysbean, "caihe","3");
+	}
+}

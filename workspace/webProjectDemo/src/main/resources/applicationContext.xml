@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 查找最新的schemaLocation 访问 http://www.springframework.org/schema/ -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:amq="http://activemq.apache.org/schema/core"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd   
+        http://www.springframework.org/schema/context   
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://activemq.apache.org/schema/core
+        http://activemq.apache.org/schema/core/activemq-core-5.9.0.xsd">
+        
+        <!--  **************************************** Spring定时任务的搭建**************************************** -->
+        <bean id="taskJob" class="com.task.DataConversionTask"/>
+        
+        <!-- 使用MethodInvokingJobDetailFactoryBean，任务类可以不实现Job接口，通过targetMethod指定调用方法-->
+        <bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		    <property name="group" value="job_work"/>
+		    <property name="name" value="job_work_name"/>
+		    <!--false表示等上一个任务执行完后再开启新的任务-->
+		    <property name="concurrent" value="false"/>
+		    <property name="targetObject">
+		        <ref bean="taskJob"/>
+		    </property>
+		    <property name="targetMethod">
+		        <value>run</value>
+		    </property>
+		</bean>
+		
+		<!--  调度触发器 -->
+		<bean id="myTrigger"
+		      class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		    <property name="name" value="work_default_name"/>
+		    <property name="group" value="work_default"/>
+		    <property name="jobDetail">
+		        <ref bean="jobDetail" />
+		    </property>
+		    <property name="cronExpression">
+		        <value>0/10 * * * * ?</value>
+		    </property>
+		</bean>
+		
+		<!-- 调度工厂 -->
+		<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		    <property name="triggers">
+		        <list>
+		            <ref bean="myTrigger"/>
+		        </list>
+		    </property>
+		    <property name="autoStartup" value="true" />
+		</bean>
+		
+		<!--  **************************************** Spring dbcp数据源**************************************** -->
+		<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+			<property name="jndiName" value="java:/comp/env/jdbc/lovin"></property>
+		</bean>
+</beans>

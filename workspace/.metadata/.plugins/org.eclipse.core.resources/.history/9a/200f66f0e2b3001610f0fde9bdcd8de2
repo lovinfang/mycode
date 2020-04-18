@@ -1,0 +1,52 @@
+package com.asiainfo.cm.module.chnlkpiinfo.service.interfaces;
+
+import java.util.List;
+
+import com.asiainfo.cm.module.chnlkpiinfo.bo.QBOChnlKpiInfoBean;
+import com.asiainfo.cm.module.chnlkpiinfo.data.ChnlKpiInfoReq;
+import com.asiainfo.cm.module.chnlkpiinfo.data.ChnlKpiInfoRsp;
+
+public interface IChnlKpiInfoSV {
+
+	/**
+	 * 查询指标项总数
+	 * @param req
+	 * @return
+	 * @throws Exception
+	 */
+	public ChnlKpiInfoRsp qryChnlKpiInfoByCondition(ChnlKpiInfoReq req)
+			throws Exception;
+	
+	/**
+	 * 查询指标项总数
+	 * @param req
+	 * @return
+	 * @throws Exception
+	 */
+	public int qryChnlKpiInfoCountByCondition(ChnlKpiInfoReq req)
+			throws Exception;
+
+	/**
+	 * 添加指标项
+	 * @param req
+	 * @throws Exception
+	 */
+	public ChnlKpiInfoRsp addChnlKpiInfo(ChnlKpiInfoReq req) throws Exception;
+
+	/**
+	 * 修改指标项
+	 * @param req
+	 * @throws Exception
+	 */
+	public ChnlKpiInfoRsp modChnlKpiInfo(ChnlKpiInfoReq req) throws Exception;
+	
+	
+	/**
+	 * 导出指标信息
+	 * @param req
+	 * @return
+	 * @throws Exception
+	 */
+	public List<QBOChnlKpiInfoBean> expChnlKpiInfo(ChnlKpiInfoReq req)throws Exception;
+
+}

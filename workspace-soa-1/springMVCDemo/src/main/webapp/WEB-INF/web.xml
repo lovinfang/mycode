@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.1" 
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+				http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+
+  <display-name>Spring MVC Study</display-name>
+  <!-- spring 配置文件 
+  	   spring应用上下文,理解层次化的ApplicationContext 
+  -->
+  <context-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>/WEB-INF/configs/spring/applicationContext*.xml</param-value>
+  </context-param>
+  
+  <listener>
+      <listener-class>
+          org.springframework.web.context.ContextLoaderListener
+      </listener-class>
+  </listener>
+  
+  <!-- springmvc配置文件 -->
+  <servlet>
+      <servlet-name>mvc-dispatcher</servlet-name>
+      <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+      <!-- DispatcherServlet对应的上下文配置，如果不配置下面的init-param 
+                              默认为/WEB-INF/$servlet-name$-servlet.xml(mvc-dispatcher-servlet.xml) 
+      -->
+      <init-param>
+          <param-name>contextConfigLocation</param-name>
+          <param-value>/WEB-INF/configs/spring/mvc-dispatcher-servlet.xml</param-value>
+      </init-param>
+      <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+      <servlet-name>mvc-dispatcher</servlet-name>
+      <!-- mvc-dispatcher拦截所有的请求-->
+      <url-pattern>/</url-pattern>
+  </servlet-mapping>
+</web-app>

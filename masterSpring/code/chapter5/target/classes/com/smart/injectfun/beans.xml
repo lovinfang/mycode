@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+    <bean id="car" class="com.smart.injectfun.Car"
+          p:brand="红旗CA72" p:price="2000" scope="prototype"/>
+
+    <!-- 由于car是prototype类型，magicBoss每次通过 lookup-method都会生成不一样的car对象
+         希望通过一个singleton Bean 获取一个prototype Bean，需要导入cgLib包，但是此例子中并未导入此包
+     -->
+    <bean id="magicBoss" class="com.smart.injectfun.MagicBoss" >
+        <lookup-method name="getCar" bean="car"/>
+    </bean>
+
+    <!-- 通过boss2中的getCar替换boss1中的getCar方法 -->
+    <bean id="boss2" class="com.smart.injectfun.Boss2"/>
+    <bean id="boss1" class="com.smart.injectfun.Boss1">
+        <replaced-method name="getCar" replacer="boss2"></replaced-method>
+    </bean>
+</beans>

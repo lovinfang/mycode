@@ -1,0 +1,360 @@
+package com.asiainfo.gzcm.module.imp;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.ai.appframe2.common.SessionManager;
+import com.ai.appframe2.privilege.UserInfoInterface;
+import com.ai.appframe2.service.ServiceFactory;
+import com.ai.common.ivalues.IBOBsStaticDataValue;
+import com.ai.common.util.StaticDataUtil;
+import com.ai.secframe.extend.ivalues.IBOSecOrgAndExtValue;
+import com.asiainfo.cm.common.util.DateUtils;
+import com.asiainfo.cm.common.util.RegionUtil;
+import com.asiainfo.cm.common.util.ReportUtil;
+import com.asiainfo.cm.common.util.ValidateUtil;
+import com.asiainfo.cm.module.channelinfo.bo.QBOChnlAllMobileQryBean;
+import com.asiainfo.cm.module.channelinfo.data.ChnlAllQryReq;
+import com.asiainfo.cm.module.channelinfo.data.ChnlAllQryRsp;
+import com.asiainfo.cm.module.channelinfo.service.interfaces.IChnlBasicInfoQrySV;
+import com.asiainfo.cm.module.homepage.orgoperator.services.interfaces.ISecOrgExtSV;
+import com.asiainfo.cm.module.imp.AbstractImpParse;
+import com.asiainfo.gzcm.common.CommonConstant;
+import com.asiainfo.gzcm.common.CommonUtils;
+import com.asiainfo.gzcm.module.chnlProfitAssess.bo.BOChnlTxCityUploadBean;
+import com.asiainfo.gzcm.module.chnlProfitAssess.data.ChnlProfitAssessRecordRsp;
+import com.asiainfo.gzcm.module.chnlProfitAssess.service.interfaces.IChnlProfitAssessRecordSV;
+import com.asiainfo.gzcm.module.chnlProfitAssess.service.interfaces.IChnlTxCityUploadquerySV;
+
+public class ChnlProfitRegionRecordImpParse extends AbstractImpParse{
+	public List doExcel(Workbook workbook) throws Exception {
+		Sheet sheet=workbook.getSheet(0);
+		//校验文件头
+		List<String> headerList=new ArrayList<String>();
+		headerList.add("地市管理员填报数据");
+		headerList.add("填报时间");
+		headerList.add("渠道ID");
+		headerList.add("渠道名称");
+		headerList.add("该厅自有营业员总工资");
+		headerList.add("该厅保安人数");
+		headerList.add("该保安总工资");
+		headerList.add("保洁人数");
+		headerList.add("保洁总工资");
+		headerList.add("房屋租金");
+		headerList.add("自购房产分摊费");
+		headerList.add("办公用品费");
+		headerList.add("建厅时间");
+		headerList.add("建厅费用");
+		headerList.add("重新装修时间");
+		headerList.add("重新装修费用");
+		headerList.add("设备采购时间");
+		headerList.add("设备采购费用");
+		headerList.add("设备维修费用");
+		headerList.add("设备租金费用");
+		headerList.add("水费");
+		headerList.add("电费");
+		headerList.add("暖气费");
+		headerList.add("物业管理费");
+		headerList.add("单厅宣传费");
+		headerList.add("物流配送费");
+		headerList.add("移动份额");
+		headerList.add("租金收入");
+		headerList.add("其他销售收入");
+		
+		//用于操作地市管理员上报表的dao
+		IChnlTxCityUploadquerySV ichnlTxCityUploadquerySV = (IChnlTxCityUploadquerySV)ServiceFactory.getService(IChnlTxCityUploadquerySV.class);
+		
+		boolean flag = CommonUtils.checkHeadInfo(sheet.getRow(0),sheet.getRow(1),headerList);
+		if(!flag)
+		{
+			throw new Exception("文档错误！");
+		}
+		//校验文件内容
+		int rowCount=sheet.getRows();//
+		List<ChnlProfitAssessRecordRsp> listSucc=new ArrayList<ChnlProfitAssessRecordRsp>();
+		List<ChnlProfitAssessRecordRsp> listFaile=new ArrayList<ChnlProfitAssessRecordRsp>();
+		IChnlBasicInfoQrySV chnlSv=(IChnlBasicInfoQrySV)ServiceFactory.getService(IChnlBasicInfoQrySV.class);
+		//获取操作员地市县市
+//		IBaseSV baseSv=(IBaseSV)ServiceFactory.getService(IBaseSV.class);
+//		UserOrgInfoDO user=baseSv.getUserOrgInfo();
+//		String regionId=user.getRegionid();
+//		String countyId=user.getCountyid();
+//		String roleSeq=user.getRoleseq();
+//		Long opId = user.getUserid();
+//		if(roleSeq.equals("1")){
+//			regionId="571";
+//			countyId="5711";
+//		throw new Exception("该操作员是省公司管理员，上传省评估数据");
+//	    }
+		
+		UserInfoInterface user = SessionManager.getUser();
+		//获取直营店静态数据
+		IBOBsStaticDataValue[] firstOrgTypes = StaticDataUtil.getStaticData("FIRST_ORG_TYPE");
+		String firstOrgTypeValue = "";
+		for(IBOBsStaticDataValue firstOrgType : firstOrgTypes){
+			if(CommonConstant.CHNL_PROFIT_ASSESS.ORG_CHANNEL_TYPE.SELF_CHANNEL.equals(firstOrgType.getCodeName())){
+				firstOrgTypeValue = firstOrgType.getCodeValue();
+				break;
+			}
+		}
+		
+		//存放渠道id，用于去重
+		Map chnlIdMap=new HashMap();
+		//遍历表格，取出所有评估数据
+		List<BOChnlTxCityUploadBean> chnlTxCityRecordList = new ArrayList<BOChnlTxCityUploadBean>();
+		for(int i=5;i<rowCount;i++){
+			ChnlProfitAssessRecordRsp bean=new ChnlProfitAssessRecordRsp();
+			Cell[] cells=sheet.getRow(i);
+			int cellLen = cells.length;
+			/**导入数据校验开始**/
+			//空行跳过
+			if(cellLen == 0){
+				continue;
+			}
+			//非空行，必要字段缺失报错
+			else if(cellLen < 2){
+				bean.setResult("失败");
+				bean.setExt("第"+(i+1)+"行数据不全，请检查!");
+				listFaile.add(bean);
+				continue;
+			}
+			
+			String month = cells[0].getContents().trim();
+			String chnlId=cells[1].getContents().trim();
+			
+			if(StringUtils.isBlank(month)){
+				bean.setChannelId(Long.valueOf(chnlId));
+				bean.setResult("失败");
+				bean.setExt("填报时间不能为空!");
+				listFaile.add(bean);
+				continue;
+			}
+			if(StringUtils.isBlank(chnlId)){
+				bean.setResult("失败");
+				bean.setExt("第"+(i+1)+"行渠道编号不能为空!");
+				listFaile.add(bean);
+				continue;
+			}
+			if(!ValidateUtil.isNumber(chnlId))
+			{
+				bean.setResult("失败");
+				bean.setExt("["+chnlId+"]渠道编号不是为数字!");
+				listFaile.add(bean);
+				continue;
+			}
+			
+			//判断渠道是否有重复
+			if(chnlIdMap.containsKey(chnlId)){
+				bean.setChannelId(Long.valueOf(chnlId));
+				bean.setExt("["+chnlId+"]渠道有重复!");
+				bean.setResult("失败");
+				listFaile.add(bean);
+				continue;
+			}else{
+				chnlIdMap.put(chnlId, chnlId);
+			}
+			
+			//校验渠道是否存在
+			ChnlAllQryReq req = new ChnlAllQryReq();
+			QBOChnlAllMobileQryBean paramBean=new QBOChnlAllMobileQryBean();
+			paramBean.setOrganizeId(Long.valueOf(chnlId));
+			if(null != firstOrgTypeValue && StringUtils.isNotBlank(firstOrgTypeValue)){
+				paramBean.setOrgChannelType(Long.valueOf(firstOrgTypeValue));
+			}
+			
+			ISecOrgExtSV iSecOrgExtSV = (ISecOrgExtSV) ServiceFactory.getService(ISecOrgExtSV.class);
+//			String sql = "select * from sec_organize_ext t,sec_organize t2 "
+//					+ "where t.organize_id = t2.organize_id and t.organize_id = '"+chnlId+"'";
+			IBOSecOrgAndExtValue iboSecOrgAndExtValue = iSecOrgExtSV.qrySecOrganizeByIdFromDB(chnlId);
+			if(null != iboSecOrgAndExtValue){
+				String district_id = iboSecOrgAndExtValue.getDistrictId();
+//				paramBean.setRegionCode(region_code);
+				RegionUtil.getRegionIdByDistrictId(Long.valueOf(district_id));
+				
+			}else{
+				bean.setExt("["+chnlId+"]渠道不存在!");
+				bean.setResult("失败");
+				listFaile.add(bean);
+				continue;
+			}
+			
+			req.setChnlbean(paramBean);
+			ChnlAllQryRsp rsp = chnlSv.qryChnlAllMobileInfo(req);
+			List<QBOChnlAllMobileQryBean> tempList=rsp.getBeans();
+			if(null == tempList || tempList.size() == 0){
+				bean.setChannelId(Long.valueOf(chnlId));
+				bean.setExt("["+chnlId+"]渠道不存在或不是自营厅!");
+				bean.setResult("失败");
+				listFaile.add(bean);
+				continue;
+			}
+			//根据渠道和月份查看是否该渠道已经上传了该月的数据，
+			
+			BOChnlTxCityUploadBean beanOfMonth =new BOChnlTxCityUploadBean();
+			beanOfMonth.setMonth(month);
+			beanOfMonth.setChannelId(Long.valueOf(chnlId));
+			
+			if(ichnlTxCityUploadquerySV.querybeansByChnlIdAndMonth(beanOfMonth)){
+				bean.setChannelId(Long.valueOf(chnlId));
+				bean.setExt("["+chnlId+"]渠道已经上传了"+month+"的数据，请不要重复上传;若要修改请在修改页面修改");
+				bean.setResult("失败");
+				listFaile.add(bean);
+				continue;
+				
+			}
+
+		
+			
+			
+			/**导入数据校验结束**/
+			//cells[2]为渠道名称
+			String shopAssistantSalary= cellLen >= 4 ? cells[3].getContents().trim() : "";
+			String securityAmount = cellLen >= 5 ? cells[4].getContents().trim() : "";
+			String securitySalary = cellLen >= 6 ? cells[5].getContents().trim() : "";
+			String cleanerAmount = cellLen >= 7 ? cells[6].getContents().trim() : "";
+			String cleanerSalary = cellLen >= 8 ? cells[7].getContents().trim() : "";
+			String shopRentFee = cellLen >= 9 ? cells[8].getContents().trim() : "";
+			String shareFee = cellLen >= 10 ? cells[9].getContents().trim() : "";
+			String workFee = cellLen >= 11 ? cells[10].getContents().trim() : "";
+			String shopCreateTime = cellLen >= 12 ? cells[11].getContents().trim() : "";
+			String shopCreateFee = cellLen >= 13 ? cells[12].getContents().trim() : "";
+			String shopRecreateTime = cellLen >= 14 ? cells[13].getContents().trim() : "";
+			String shopRecreateFee = cellLen >= 15 ? cells[14].getContents().trim() : "";
+			String devicePurchaseTime = cellLen >= 16 ? cells[15].getContents().trim() : "";
+			String devicePurchaseFee = cellLen >= 17 ? cells[16].getContents().trim() : "";
+			String deviceMaintainFee = cellLen >= 18 ? cells[17].getContents().trim() : "";
+			String deviceRentFee = cellLen >= 19 ? cells[18].getContents().trim() : "";
+			String waterFee = cellLen >= 20 ? cells[19].getContents().trim() : "";
+			String electricFee = cellLen >= 21 ? cells[20].getContents().trim() : "";
+			String warmFee = cellLen >= 22 ? cells[21].getContents().trim() : "";
+			String propertyManagementFee = cellLen >= 23 ? cells[22].getContents().trim() : "";
+			String publicityFee = cellLen >= 24 ? cells[23].getContents().trim() : "";
+			String shipFee = cellLen >= 25 ? cells[24].getContents().trim() : "";
+			String marketRatio = cellLen >= 26 ? cells[25].getContents().trim() : "";
+			String rentGotFee = cellLen >= 27 ? cells[26].getContents().trim() : "";
+			String otherSellFee = cellLen >= 28 ? cells[27].getContents().trim() : "";
+			
+			//保存数据
+			try{
+				BOChnlTxCityUploadBean boChnlTxCityRecord = new BOChnlTxCityUploadBean();
+				String month2 = "";
+				try{
+					SimpleDateFormat format = new SimpleDateFormat("yyyy/mm");
+					Date data = format.parse(month);
+					month2 = format.format(data).replace("/", "");
+				}
+				catch (Exception e) {
+					bean.setChannelId(Long.valueOf(chnlId));
+					bean.setExt("填报时间格式错误!["+month+"]");
+					bean.setResult("失败");
+					listFaile.add(bean);
+					continue;
+				}
+				
+				//判断该上传数据是否是上月数据
+
+				String lastmonth = ReportUtil.getLastMonth();
+			
+				if(!lastmonth.equals(month2)){		
+					bean.setChannelId(Long.valueOf(chnlId));
+					bean.setExt(chnlId+"填报时间错误["+month+"]"+"请填报上月数据");
+					bean.setResult("失败");
+					listFaile.add(bean);
+					continue;
+					
+				}
+				
+				boChnlTxCityRecord.setMonth(month2);
+				boChnlTxCityRecord.setChannelId(Long.valueOf(chnlId));
+				boChnlTxCityRecord.setShopAssistantSalary(StringUtils.isBlank(shopAssistantSalary)?0 : Double.parseDouble(shopAssistantSalary));
+				boChnlTxCityRecord.setSecurityAmount(StringUtils.isBlank(securityAmount)?0 : Integer.parseInt(securityAmount));
+				boChnlTxCityRecord.setSecuritySalary(StringUtils.isBlank(securitySalary)?0 : Double.parseDouble(securitySalary));
+				boChnlTxCityRecord.setCleanerAmount(StringUtils.isBlank(cleanerAmount)?0 : Integer.parseInt(cleanerAmount));
+				boChnlTxCityRecord.setCleanerSalary(StringUtils.isBlank(cleanerSalary)?0 : Double.parseDouble(cleanerSalary));
+				boChnlTxCityRecord.setShopRentFee(StringUtils.isBlank(shopRentFee)?0 : Double.parseDouble(shopRentFee));
+				boChnlTxCityRecord.setShareFee(StringUtils.isBlank(shareFee)?0 : Double.parseDouble(shareFee));
+				boChnlTxCityRecord.setWorkFee(StringUtils.isBlank(workFee)?0 : Double.parseDouble(workFee));
+				//对时间格式非空校验
+				if(!StringUtils.isEmpty(shopCreateTime)){
+					boChnlTxCityRecord.setShopCreateTime(DateUtils.getTimestampByYYYYMMDDHHMMSS(shopCreateTime,"yyyy/MM/dd"));
+				}
+				boChnlTxCityRecord.setShopCreateFee(ValidateUtil.isNumber(shopCreateFee)?Double.parseDouble(shopCreateFee):0);
+				if(!StringUtils.isEmpty(shopRecreateTime)){
+					boChnlTxCityRecord.setShopRecreateTime(DateUtils.getTimestampByYYYYMMDDHHMMSS(shopRecreateTime, "yyyy/MM/dd"));
+				}
+				boChnlTxCityRecord.setShopRecreateFee(ValidateUtil.isNumber(shopRecreateFee)?Double.parseDouble(shopRecreateFee):0);
+				if(!StringUtils.isEmpty(devicePurchaseTime)){
+					boChnlTxCityRecord.setDevicePurchaseTime(DateUtils.getTimestampByYYYYMMDDHHMMSS(devicePurchaseTime, "yyyy/MM/dd"));
+				}
+				boChnlTxCityRecord.setDevicePurchaseFee(StringUtils.isBlank(devicePurchaseFee)?0 : Double.parseDouble(devicePurchaseFee));
+				boChnlTxCityRecord.setDeviceMaintainFee(StringUtils.isBlank(deviceMaintainFee)?0 : Double.parseDouble(deviceMaintainFee));
+				boChnlTxCityRecord.setDeviceRentFee(StringUtils.isBlank(deviceRentFee)?0 : Double.parseDouble(deviceRentFee));
+				boChnlTxCityRecord.setWaterFee(StringUtils.isBlank(waterFee)?0 : Double.parseDouble(waterFee));
+				boChnlTxCityRecord.setElectricFee(StringUtils.isBlank(electricFee)?0 : Double.parseDouble(electricFee));
+				boChnlTxCityRecord.setWarmFee(StringUtils.isBlank(warmFee)?0 : Double.parseDouble(warmFee));
+				boChnlTxCityRecord.setPropertyManagementFee(StringUtils.isBlank(propertyManagementFee)?0 : Double.parseDouble(propertyManagementFee));
+				boChnlTxCityRecord.setPublicityFee(StringUtils.isBlank(publicityFee)?0 : Double.parseDouble(publicityFee));
+				boChnlTxCityRecord.setShipFee(StringUtils.isBlank(shipFee)?0 : Double.parseDouble(shipFee));
+				boChnlTxCityRecord.setMarketRatio(StringUtils.isBlank(marketRatio)?0 : Double.parseDouble(marketRatio));
+				boChnlTxCityRecord.setRentGotFee(StringUtils.isBlank(rentGotFee)?0 : Double.parseDouble(rentGotFee));
+				boChnlTxCityRecord.setOtherSellFee(StringUtils.isBlank(otherSellFee)?0 : Double.parseDouble(otherSellFee));
+	
+				boChnlTxCityRecord.setStatus(CommonConstant.CHNL_PROFIT_ASSESS.STATUS.VALID);
+				boChnlTxCityRecord.setRecStatus(CommonConstant.CHNL_PROFIT_ASSESS.REC_STATUS.OPEN);
+				boChnlTxCityRecord.setCreateDate(DateUtils.getCurrentDate());
+				boChnlTxCityRecord.setDoneDate(DateUtils.getCurrentDate());
+				boChnlTxCityRecord.setDoneCode(1);
+				boChnlTxCityRecord.setOpId(user.getID());
+				boChnlTxCityRecord.setOrgId(user.getOrgId());
+				boChnlTxCityRecord.setTotalFinanceCost(boChnlTxCityRecord.getShopRentFee()+boChnlTxCityRecord.getShareFee()+boChnlTxCityRecord.getWorkFee()
+				+boChnlTxCityRecord.getShopRecreateFee()+boChnlTxCityRecord.getDeviceMaintainFee()
+				+boChnlTxCityRecord.getWaterFee()+boChnlTxCityRecord.getElectricFee()+boChnlTxCityRecord.getPropertyManagementFee()+boChnlTxCityRecord.getPublicityFee()
+				+boChnlTxCityRecord.getShipFee()+boChnlTxCityRecord.getSecuritySalary()+boChnlTxCityRecord.getCleanerSalary()+boChnlTxCityRecord.getShopAssistantSalary());
+				chnlTxCityRecordList.add(boChnlTxCityRecord);
+			}
+			catch (Exception e) {
+				bean.setChannelId(Long.valueOf(chnlId));
+				bean.setExt("请检查第"+(i+1)+"行格式"+e.toString());
+				bean.setResult("失败");
+				listFaile.add(bean);
+				continue;
+			}
+			//数据正常放到成功列表
+			bean.setChannelId(Long.valueOf(chnlId));
+			bean.setResult("成功");
+			listSucc.add(bean);
+		}
+		IChnlProfitAssessRecordSV sv = (IChnlProfitAssessRecordSV) ServiceFactory.getService(IChnlProfitAssessRecordSV.class);
+		sv.saveRegionalChnlProfitRecBatch(chnlTxCityRecordList.toArray(new BOChnlTxCityUploadBean[0]));
+		Map map1=new HashMap();
+		map1.put("succ",listSucc.size());
+		map1.put("faile", listFaile.size());
+		map1.put("SuccDataNum",listSucc.size());
+		map1.put("FaileDataNum", listFaile.size());
+		map1.put("FaileData", listFaile);
+		//将失败的记录放到session里
+		if(SessionManager.getUser() != null){
+			SessionManager.getUser().set("ExpFaile", listFaile);
+			SessionManager.getUser().set("ExpSucc", listSucc);
+		}
+		List list3=new ArrayList();
+		list3.add(map1);		
+		return list3;
+	}
+
+	@Override
+	public List doTxt(List onLine) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

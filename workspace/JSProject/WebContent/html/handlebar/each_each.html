@@ -1,0 +1,68 @@
+<!-- 循环嵌套在稍微复杂点的页面设计中即会涉及，Handlebars.js完全支持each嵌套，可以在each中使用each。
+
+上边的例子演示了两个关键点：each嵌套的可实现性、如何在each嵌套中读取父each中的数据。
+
+例子很简单，info本身是一个信息列表，是属于某个人的，我们先用each遍历所有的人，然后再遍历每个人的info信息，这样就形成了each嵌套。但是我们想在内层each中获取外层each的数据，达到“谁的什么”这样的显示效果。
+
+显然，如果直接在内层each中使用{{name}}，是取不到任何数据的，因为内层each的上下文是info，而name属性在表示人的上下文中。
+
+此时，可以用{{../name}}从内层each获取上一级each的name属性，语法和html的路径表示一样，简单吧？
+ -->
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <META http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>each嵌套 - by 杨元</title>
+  </head>
+  <body>
+    <h1>each嵌套</h1>
+    <!--基础html框架-->
+    <div id="dataList"></div>
+    
+    <!--插件引用-->
+    <script type="text/javascript" src="../../script/jquery/jquery.js"></script>
+    <script type="text/javascript" src="../../script/handlebars/handlebars.js"></script>
+    
+    <!--Handlebars.js模版-->
+    <!--Handlebars.js模版放在script标签中，保留了html原有层次结构,模版中要写一些操作语句-->
+    <!--id可以用来唯一确定一个模版,type是模版固定的写法-->
+    <script id="table-template" type="text/x-handlebars-template">
+      {{#each this}}
+        {{#each info}}
+          {{../name}}的{{this}}<br>
+        {{/each}}
+      {{/each}}
+    </script>
+    
+    <!--进行数据处理、html构造-->
+    <script type="text/javascript">
+      $(document).ready(function() {
+        //模拟的json对象
+         var data = [{
+                      "name":"张三",
+                      "info":[
+                        "眼睛",
+                        "耳朵",
+                        "鼻子"
+                      ]
+                    },{
+                      "name":"李四",
+                      "info":[
+                        "爸爸",
+                        "妈妈",
+                        "妻子"
+                      ]
+                    }];
+        
+        //注册一个Handlebars模版，通过id找到某一个模版，获取模版的html框架
+        //$("#table-template").html()是jquery的语法，不懂的童鞋请恶补。。。
+        var myTemplate = Handlebars.compile($("#table-template").html());
+        
+        //将json对象用刚刚注册的Handlebars模版封装，得到最终的html，插入到基础table中。
+        $('#dataList').html(myTemplate(data));
+      });
+    </script>
+  </body>
+</html>

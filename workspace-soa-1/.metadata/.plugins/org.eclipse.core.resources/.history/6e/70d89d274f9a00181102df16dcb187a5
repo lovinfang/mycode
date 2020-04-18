@@ -1,0 +1,10 @@
+package com.lovin.framework.service;
+
+public class FrameworkTestServiceImpl implements FrameworkTestService{
+
+	public String sleep(String param) {
+		System.out.println("Provider->FrameworkServiceTestImpl-sleep:param:"+param);
+		return "Provider->FrameworkServiceTestImpl-sleep:param:"+param;
+	}
+
+}

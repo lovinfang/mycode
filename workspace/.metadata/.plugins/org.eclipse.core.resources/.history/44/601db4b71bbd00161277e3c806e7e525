@@ -1,0 +1,950 @@
+/*
+ * Copyright (c) 2012-2014 by Asiainfo-linkage
+ * All rights reserved.
+ */
+package com.asiainfo.cm.common.constant;
+
+
+/**
+ * 常量�?
+ *
+ * @author $Author: hujian3 $
+ * @version $Revision: 1415609 $
+  */
+public interface CMConstants {
+	
+	 /**
+     *系统常量
+     * @author        [mayc]
+     * @version        1.0
+     */
+    public interface System {
+        String FIRST_ORG_TYPE = "FIRST_ORG_TYPE";//渠道一级类型
+        String SEC_ORG_TYPE = "SEC_ORG_TYPE"; //渠道二级类型
+        String THIRD_ORG_TYPE = "THIRD_ORG_TYPE"; //渠道三级类型
+        String CHANNEL_OPER_SEC_TYPE = "CHANNEL_OPER_SEC_TYPE";//店员职位
+        String MANAGER_ROLE="MANAGER_ROLE";//公告发布管理角色
+        int EVERY_COUNT_MONTH=6;//考核指标查询前6个月已完成值
+        String CM_PORTAL_POPEDOMIMPL_SESSION="SCRM_PORTAL_POPEDOMIMPL_SESSION";//pageframe写死了scrm，所以这里只能先用这个标志
+    }
+
+  
+
+    /**
+     * WEB常量
+     * @author        [mayc]
+     * @version        1.0
+     */
+    public interface WEB_STATUS_CODE {
+        String SUCCESS_CODE_VALUE = "200"; //成功标示，前台交互的标示
+        String SYSTEM_ERROR_CODE_VALUE = "-9999"; //系统错误标示
+    }
+
+    /**
+     * 我的收藏常量
+     * @author       [hujian3]
+     *
+     */
+    public interface MY_FAVORITE {
+        int MAX_NUM = 10; //我的收藏允许添加的最大个�?
+    }	
+	
+	public interface CHNL {
+		/**全省系统参数 X*/
+		
+		 String REGION_PROVINCE_CODE = "000"; //	地市,全省代码,登陆系统使用
+		 String REGION_PROVINCE_DEFAULT = "571"; //	地市代码,登陆操作员地区如果是全省,则默认是"杭州"
+		 String REGION_CODE_0 = "全省"; // 地市 '全省' 代码	dbgrid列表自定义用
+
+		/**districtId=0*/
+		/**districtId=-1*/
+		 
+		 String CHANNEL_TYPE_REGION	="2";	//渠道类型：2- 区域营销中心
+			
+	}
+
+	public interface SERVICE_DEAL {
+		  String SECCUSS_CODE	="200";	//成功
+		 String ERROR_CODE	="-1";	//失败
+			
+	}
+	
+	 /**
+     * 表记录状态常量
+     * @author        libo6
+     *
+     */
+	public interface STATE{
+		 Integer NORMAL_INT	=1;	//正常
+		 Integer DELETE_INT	=0;	//删除
+		 
+		 String NORMAL_STR	="U";	//正常
+		 String DELETE_STR	="E";	//删除
+			
+		 Integer EMPLOYEE_STATUS_NORMAL_INT	= 1;	//正常
+		 Integer EMPLOYEE_STATUS_MOVE_INT	= 2;	//调职
+		 Integer EMPLOYEE_STATUS_LEAVE_INT	= 3;	//离职
+         
+		 String NORMAL_STRING="1";//正常
+		 String DELETE_STRING="0";//删除
+	}
+	
+	/**
+     * 连锁渠道类型常量
+     * @author        zhangjin
+     *
+     */
+	public interface CHANNEL_ORG_TYPE{
+		 int PROV_ORG_TYPE=0;
+		 int COUNTYR_ORG_TYPE=2;
+         int REGION_ORG_TYPE=1;	
+         int AGENT_ORG_TYPE=3;
+         int CHNL_ORG_TYPE=4;
+	}
+	
+	/**
+     * 静态常量codeType
+     * @author        zhangjin
+     *
+     */
+	public interface BS_STATIC_CODE_TYPE{
+		//组织类型
+		String SEC_ORG_TYPE="SEC_ORG_TYPE";
+		//--------------------------连锁渠道静态常量配置--------------------------------
+		 //连锁渠道类型
+		 String	CHAIN_ORG_TYPE="CHAIN_ORG_TYPE";
+		 //连锁渠道地市
+		 String CHANNEL_REGION_CODE="CHANNEL_REGION_CODE";
+		 //连锁渠道签约情况
+		 String SIGN_STAUS="SIGN_STAUS";
+		 //连锁渠道专营情况
+		 String CHNL_MONO_TYPE="IS_SPECIALIZED_TYPE";//CHNL_MONO_TYPE
+		 //连锁渠道状态
+		 String CHAIN_ORG_STATE="CHAIN_ORG_STATE";
+		 //连锁渠道星级
+		 String CHAIN_ORG_LEVEL="CHAIN_ORG_LEVEL";
+		 //网点总店情况
+		 String CHNNL_SHOP_TYPE="CHNNL_SHOP_TYPE";
+		//是否有4A组织
+		 String HAS_4A_ORGANIZE="HAS_4A_ORGANIZE";
+		//--------------------------连锁渠道静态常量配置end--------------------------------
+		 
+		//--------------------------指标项静态常量配置-----------------------------------
+		 //地图显示指标项阈值
+		 String CHNL_ISMAPSHOW_THRESHOLD="CHNL_ISMAPSHOW_THRESHOLD";
+		 //核心指标项阈值
+		 String CHNL_ISIMOPTANT_THRESHOLD="CHNL_ISIMOPTANT_THRESHOLD";
+		//核心指标项阈值
+		 String CHNL_ISIMOPTANT_LOWEST_THRESHOLD="CHNL_ISIMOPTANT_LOWEST_THRESHOLD";
+		 //地图显示指标项阈值
+		 String CHNL_ISMAPSHOW_LOWEST_THRESHOLD="CHNL_ISMAPSHOW_LOWEST_THRESHOLD";
+		 //指标项一级类型
+		 String CHNL_KPI_FIRSTTYPE="KPI_FIRSTTYPE";
+		 //是、否
+		 String CHNL_JUDGE_TYPE="JUDGE_TYPE";
+		 //考核周期
+		 String CHNL_CHK_PERIOD="PERIOD_TYPE";
+		//--------------------------指标项静态常量配置end--------------------------------
+		 //订单状态
+		 String APPLY_ORDER_TYPE = "APPLY_ORDER_TYPE";
+		 //订单类型
+		 String APPLY_ORDER_STATUS = "APPLY_ORDER_STATUS";
+		 //订单结果
+		 String APPLY_ORDER_RESULT = "APPLY_ORDER_RESULT";
+		 //人员二级类型
+		 String CHANNEL_OPER_SEC_TYPE = "CHANNEL_OPER_SEC_TYPE";
+		 //二级工号状态
+		 String SEC_OPER_STATUS = "SEC_OPER_STATUS";
+	}
+	
+	/**
+     * 网点是否专营
+     * @author        zhangjin
+     *
+     */
+	public interface CHANNEL_POINT_IS_SPECIALIZED{
+		 int IS_SPECIALIZED=1;//专营
+		 int NOT_SPECIALIZED=0;//非专营
+	}
+	
+	/**
+     * 总店情况
+     * @author        zhangjin
+     *
+     */
+	public interface CHANNEL_POINT_SHOP_TYPE{
+		 String REGION_SHOP="1";//市总店
+		 String BRANCH_SHOP="0";//分店
+	}
+	
+	/**
+     * 新增 连锁渠道组织的组织类型
+     * @author        zhangjin
+     *
+     */
+	public interface CHANNEL_CHAIN_ORG_TYPE{
+		 String CHANNEL_CHAIN_ORG_TYPE="81001";//连锁渠道
+		 String CHANNEL_DIRECT_SALE_ORG_TYPE="80003";//直销渠道
+		 String CHANNEL_CHAIN_SEC_ORG_TYPE_COUNTY="810011";//全国连锁
+		 String CHANNEL_CHAIN_SEC_TYPE_PROV="810012";//省级渠道
+		 String CHANNEL_CHAIN_SEC_TYPE_REGION="810013";//市级渠道
+		 String CHANNEL_CHAIN_SEC_TYPE_AGENT="80541";//代理人
+		 String CHANNEL_CHAIN_THIRD_ORG_TYPE_CP="8100111";//全国连锁（省级）
+		 String CHANNEL_CHAIN_THIRD_ORG_TYPE_CR="8100112";//全国连锁（市级）
+		 String CHANNEL_CHAIN_THIRD_ORG_TYPE_PP="8100121";//省级连锁（省级）
+		 String CHANNEL_CHAIN_THIRD_ORG_TYPE_PR="8100122";//省级连锁（市级）
+	}
+	
+	/**
+     * 是否有4A组织
+     * @author        zhangjin
+     *
+     */
+	public interface HAS_4A_ORGANIZE{
+		 int HASNOT=0;//无
+		 int HAS=1;//有
+		 int DISABLED=2;//禁用
+	}
+	
+	/**
+	 * org_seq
+	 *
+	 */
+	public interface ORG_SEQ{
+		 int PROVINCE=1;//省级
+		 int REGION=2;//市级
+		 int COUNTY=3;//县级
+		 int AREA=4;//片区
+		 int CHANNEL=5;//渠道
+		 int NOT_ALLOW=-99;//未知
+	}
+	
+	/**
+	 * role_seq
+	 *
+	 */
+	public interface ROLE_SEQ{
+		 String PROVINCE="1";//省级管理员
+		 String REGION="2";//市级管理员
+		 String COUNTY="3";//县级管理员
+		 String AREA="4";//片区经理
+		 String SALER="5";//销售经理
+		 String NOT_ALLOW="-99";//未知
+		 int PROVINCE_SEQ=1;//省级管理员
+		 int REGION_SEQ=2;//市级管理员
+		 int COUNTY_SEQ=3;//县级管理员
+		 int AREA_SEQ=4;//片区经理
+		 int SALER_SEQ=5;//销售经理
+		 int NOT_ALLOW_SEQ=-99;//未知
+	}
+	
+	/**
+	 * session
+	 *
+	 */
+	public interface SESSION{
+		String ORG_SEQ="ORG_SEQ";
+		String ROLE_SEQ="ROLE_SEQ";
+		String CM_HOME_PAGE="CM_HOME_PAGE";
+		String CM_CFG_MENU="CM_CFG_MENU";
+		String CAN_QRY_MENU="CAN_QRY_MENU";
+		String MENU_LIST="MENU_LIST";
+		String PAGE_MAP="PAGE_MAP";
+		String SEC_FUNCTION_MAP="SEC_FUNCTION_MAP";
+		String CAN_QRY_CHANNEL="CAN_QRY_CHANNEL";
+		String CM_ORG_MESSAGES="CM_ORG_MESSAGES";
+		String MY_FAVS="MY_FAVS";
+		String MODULE_TYPE="MODULE_TYPE";
+		String COMPLEX_QRY_PERMISSION="COMPLEX_QRY_PERMISSION";
+		String ROLE_ID_LIST="ROLE_ID_LIST";
+	}
+	
+	/**
+	 * 考核周期
+	 *
+	 */
+	public interface CHK_PERIOD{
+		 int YEAR=1;//年
+		 int QUARTER=2;//季度
+		 int MONTH=3;//月
+	}
+	
+	 
+  /**
+     * ESB常量
+     * @author        [mayc]
+     * @version        1.0
+     */
+    public interface EsbConstant {
+    	String BUSI_INFO = "BUSI_INFO";
+        String PUB_INFO = "PUB_INFO";
+        String RESULT_CODE = "RETURN_RESULT"; //报文ESB_KEY_CODE result code
+        String RESULT_MSG = "RETURN_DESC"; // 报文ESB_KEY_CODE  result msg
+        String ERRORINFO = "ERRORINFO";
+        String RetInfo = "RetInfo";
+        String ESB_SUCCESS_CODE = "0";
+        String ORG_ID_ESB_DEFAULT = "0";
+        int ESB_MAX_PERPAGE_TOTAL = 3000;
+        int ESB_MAX_TOTAL = 15000; //大概要用�?88m
+        String ESB_SYS_OP_ID = "20037686"; //ESB sysOPId --10010852
+        String ESB_SYS_PASSWORD = "8323f15343239abb72885940220a4f3e"; //ESB SYS password --7c6a180b36896a0a8c02787eeafb0e4c
+    }
+    
+    /**
+     * 
+     * <p>
+     * Title: CBOSS<br>
+     * Copyright: Copyright (c) 2014<br>
+     * Company: Asiainfo Technologies （China）,Inc. Hangzhou<br>
+     * </p>
+     * <p>
+     * Description: 报表文件下载以及数据处理状态记录
+     * </p>
+     * @version v1.0.0
+     * @author mahj3
+     * @date 2014年11月10日 上午10:37:46
+     *
+     * Modification History:
+     *---------------------------------------------------------*
+     * 2014年11月10日 mahj3 修改说明
+     *
+     */
+    public interface REPORT_FILE_RESULT{
+    	String PARA_TYPE = "KPI_PROC";//对应cmbase.bs_para_detail.para_type配置
+    	
+    	String NO_FILE = "N";//未找到数据文件
+    	String INIT = "0";//初始化
+    	String DOWN_SUCCESS = "1";//文件数据入库成功，等待第一次数据加工
+    	String DOWN_ERROR = "2";//文件数据入库失败
+    	String FSTPROC_SUCCESS = "3";//数据第一次加工成功，等待第二次数据加工
+    	String FSTPROC_ERROR = "4";//数据第一次加工失败
+    	String SECPROC_SUCCESS = "5";//数据第二次加工成功
+    	String SECPROC_ERROR = "6";//数据第二次加工失败
+    	String SCAN_DOWN_ERROR = "7";//修复解析文件数据入库失败
+    	String SCAN_FSTPROC_ERROR = "8";//修复数据第一次加工失败
+    	String SCAN_SECPROC_ERROR = "9";//修复数据第二次加工失败
+    	
+    	String DOWN_PART_SUCCESS = "A";//文件数据入库成功，部分错误数据未入库，等待第一次数据加工
+//    	String DOWN_PART_ERROR = "B";//文件数据入库失败
+    	String FSTPROC_PART_SUCCESS = "C";//数据第一次加工成功，部分错误数据未入库，等待第二次数据加工
+    	String FSTPROC_PART_ERROR = "D";//数据第一次加工失败，部分错误数据未入库，等待修复重新入库加工
+    	String SECPROC_PART_SUCCESS = "E";//数据第二次加工成功，部分错误数据未入库，等待修复重新入库加工
+    	String SECPROC_PART_ERROR = "F";//数据第二次加工失败，部分错误数据未入库，等待修复重新入库加工
+    	String SCAN_DOWN_PART_ERROR = "G";//修复解析文件数据入库失败
+    	String SCAN_FSTPROC_PART_ERROR = "H";//修复数据第一次加工失败，部分错误数据未入库
+    	String SCAN_SECPROC_PART_ERROR = "I";//修复数据第二次加工失败，部分错误数据未入库
+    	
+    	//数据错误记录日记
+    	String LOG_KPI_DAILY = "LOG_KPI_DAILY_YYYYMMDD";
+    	String LOG_KPI_MON = "LOG_KPI_MON_YYYYMM";
+    	String LOG_ENUM = "LOG_ENUM_DATA_YYYYMMDD";
+    	String LOG_CHANNEL = "LOG_CHANNEL_INFO_YYYYMMDD";
+    	
+    	//通用标记
+    	String SUCCESS = "1";
+    	String ERROR = "0";
+    	
+    	String DAILY_TASK_CODE = "RPT_DAILY_PROC";//日数据文件下载task_code
+    	String MON_TASK_CODE = "RPT_MON_PROC";//月数据文件下载task_code
+    	
+    	String KPI_DECP_REPORT = "KPI_DECP_REPORT";	//指标考核数据加工
+    	String KPI_DECP_REPORT_DAILY = "KPI_DECP_REPORT_DAILY";	//指标考核日报表task_code
+    	String KPI_DECP_REPORT_MON = "KPI_DECP_REPORT_MON";		//指标考核月报表task_code
+    	
+    	//配置在cmbase.bs_para_detail，根据para_type和para_code查询
+    	String KPI_FILE_DOWNLOAD_TYPE = "KPI_FILE_DOWNLOAD";
+    	String KPI_FILE_DIR_CODE = "0";//数据文件路径
+    	String KPI_DATA_DAILY_CODE = "1";//指标汇总日表
+    	String KPI_DATA_MON_CODE = "2";//指标汇总月表
+    	String KPI_ENUM_CODE = "3";//枚举值表文件
+    	String KPI_CHNL_DAILY_CODE = "4";//渠道信息表日文件
+    	String KPI_CHNL_MON_CODE = "5";//渠道信息表月文件
+    	String QDXF_DATA_DAILY_CODE = "6";//斯特奇日文件
+    	String QDXF_DATA_MON_CODE = "7";//斯特奇月文件
+    	
+    	//扫描修复TASK，判断是否重新解析入库的方式，1:扫描目录判断文件存在则重新解析入库；0:扫描表判断是否重新解析入库，默认为1
+    	String KPI_FILE_REDOWN_TYPE = "KPI_FILE_REDOWN_TYPE";
+    	
+    	//月文件入库前是否需要删除标识
+    	String KPI_FILE_REDOWN_MON_DEL="KPI_FILE_REDOWN_MON_DEL";
+    	
+    	String KPI_FILE_REPORT_DAILY = "RPT_KPI_DAILY_REPORT";
+    	String KPI_FILE_REPORT_MON = "RPT_KPI_MON_REPORT";
+    }
+    
+    /**
+     * 渠道星级
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface ChnlStar{
+    	String STAR1 = "1";//一星级
+    	String STAR2 = "2";//二星级
+    	String STAR3 = "3";//三星级
+    	String STAR4 = "4";//四星级
+    	String STAR5 = "5";//五星级
+    }
+    
+    /**
+     * 星级评定评定
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface StarChk{
+    	String STAR_CHK_TYPE_SIMULATION = "1";//月模拟评定
+    	String STAR_CHK_TYPE_FORMAL = "2";//正式评定
+    	String STAR_CHK_STATE_1 = "1";//配置
+    	String STAR_CHK_STATE_2 = "2";//等待经分数据
+    	String STAR_CHK_STATE_3 = "3";//计算星级
+    	String STAR_CHK_STATE_4 = "4";//人工确认
+    	String STAR_CHK_STATE_5 = "5";//完成
+    	String STAR_CHK_STATE_6 = "6";//无效
+    	String STAR_CHK_PERIOD_M = "M";//月模拟评定考核周期
+    	String STAR_CHK_PERIOD_Y = "Y";//正式评定考核周期
+    	String CAL_SECOND_TYPE1 = "CAL_SECOND_TYPE1";//商圈系数
+    	String CAL_SECOND_TYPE2 = "CAL_SECOND_TYPE2";//合作年限
+    	String CAL_SECOND_TYPE3 = "CAL_SECOND_TYPE3";//行为考核
+    	String CAL_SECOND_TYPE4 = "CAL_SECOND_TYPE4";//商圈门槛
+    	String CAL_SECOND_TYPE5 = "CAL_SECOND_TYPE5";//核心业务门槛
+    	String CAL_SECOND_TYPE6 = "CAL_SECOND_TYPE6";//星级比例
+    	String CAL_SECOND_TYPE7 = "CAL_SECOND_TYPE7";//星级积分门槛
+    	String CAL_SECOND_TYPE8 = "CAL_SECOND_TYPE8";//星级计算按地市或县市排名
+    	String CAL_SECOND_TYPE9 = "CAL_SECOND_TYPE9";//导入指标项选择
+    	String CHNL_STAR_CHK_FORMAL_INTERVAL = "CHNL_STAR_CHK_FORMAL_INTERVAL";//星级正式评定间隔
+    	String NEED_DATA_CHK = "NEED_DATA_CHK";//是否需要校验数据完整
+    }
+    
+    /**
+     * 渠道星级计算规则二级类型枚举类
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface CalSecondType{
+    	//商圈系数
+    	String CAL_SECOND_TYPE1_1 = "100001";//一类商圈
+    	String CAL_SECOND_TYPE1_2 = "100002";//二类商圈
+    	String CAL_SECOND_TYPE1_3 = "100003";//三类商圈
+    	//合作年限
+    	String CAL_SECOND_TYPE2_1 = "200001";//3-5年
+    	String CAL_SECOND_TYPE2_2 = "200002";//6-9年
+    	String CAL_SECOND_TYPE2_3 = "200003";//10年以上
+    	//行为考核
+    	String CAL_SECOND_TYPE3 = "300001";//行为考核
+    	//商圈门槛
+    	String CAL_SECOND_TYPE4 = "400001";//行为考核
+    	//核心业务门槛 
+    	String CAL_SECOND_TYPE5 = "500001";//核心业务占比
+    	//星级比例
+    	String CAL_SECOND_TYPE6_1 = "600001";//五星级
+    	String CAL_SECOND_TYPE6_2 = "600002";//四星级
+    	String CAL_SECOND_TYPE6_3 = "600003";//三星级
+    	String CAL_SECOND_TYPE6_4 = "600004";//二星级
+    	String CAL_SECOND_TYPE6_5 = "600005";//一星级
+    	//排名规则
+    	String CAL_SECOND_TYPE8_1 = "800001";//地市
+    	String CAL_SECOND_TYPE8_2 = "800002";//县市
+    	//导入指标项选择
+    	String CAL_SECOND_TYPE9_1 = "M10031";//地市
+    	String CAL_SECOND_TYPE9_2 = "M10097";//县市
+    	String CAL_SECOND_TYPE9_3 = "M10084";//县市
+    }
+    
+    /**
+     * 商圈等级
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface BusiAreaLevel{
+    	String BUSI_AREA_LEVEL_1 = "1";//一类核心商圈
+    	String BUSI_AREA_LEVEL_2 = "2";//二类重要商圈
+    	String BUSI_AREA_LEVEL_3 = "3";//三类外围商圈
+    }
+    
+    /**
+     * 是否连锁
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface IsChain{
+    	String ISCHAIN = "1";//连锁
+    	String ISNOTCHAIN = "0";//非连锁
+    }
+    
+    /**
+     * 社会渠道评估
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface ChnlAssess{
+    	String ASS_KPI_FIRST_TYPE = "ASS_KPI_FIRST_TYPE";//社会渠道评估配置code_type
+    	String ASS_KPI_FIRST_TYPE1 = "500000";//渠道掌控
+    	String ASS_KPI_FIRST_TYPE2 = "600000";//渠道规范
+    	String ASS_KPI_FIRST_TYPE3 = "700000";//渠道管理
+    	String ASS_KPI_FIRST_TYPE4 = "800000";//渠道业务
+    	String ASS_KPI_FIRST_TYPE5 = "900000";//渠道
+    	String YXQD = "500001";//有效渠道占有率
+    	String HZSQZDQD = "500002";//核心商圈终端渠道占有率
+    	String QDXTZLZQ = "600001";//渠道系统资料准确率
+    	String QDZY = "600002";//渠道专营率
+    	String ZGQDST = "600003";//直供渠道首推率
+    	String JZDSXSYD = "600004";//竞争对手销售移动产品率
+    	String SMZWG = "600005";//实名制违规率
+    	String XJXTPP = "700001";//星级系统匹配率
+    	String ZJZDGJ = "700002";//酬金自动归集率
+    	String YJGDCL = "700003";//预警工单处理率
+    	String HXQDZDYW = "800001";//核心渠道重点业务受理占比
+    	String QDXYCB = "900001";//渠道效益成本比
+    	String YGZZDXSL = "M30004";//月跟踪终端销售量
+    }
+    
+    /**
+     * 人员一级类型
+     * @author        [wanglei19]
+     * @version        1.0
+     */
+    public interface OperType{
+    	/**
+    	 * 代理人
+    	 */
+    	int AGENT = 1;
+    	/**
+    	 * 渠道人员 ---> 实体网点人员
+    	 */
+    	int CHANNEL_OPER = 2;
+    	/**
+    	 * 销售经理
+    	 */
+    	int SALE_MANAGER = 3;
+    	/**
+    	 * 代理商
+    	 */
+    	int AGENCY = 4;
+    	/**
+    	 * 客服人员
+    	 */
+    	int CUSTOM = 5;
+    	/**
+    	 * 自有渠道管理人员
+    	 */
+    	int OWN_CHANNELOPER = 6;
+    	
+    	/**
+    	 * 销售经理和自有渠道管理人员，这些人员登录系统时的ROLE_SEQ都为5
+    	 */
+    	String MANAGER_AND_CHANNELOPER = "3,6";
+    }
+    
+    /**
+     * 人员一级类型
+     * @author        [wanglei19]
+     * @version        1.0
+     */
+    public interface OperSecType{
+    	/**
+    	 * 代理人 ---- 社会代理人
+    	 */
+    	int SOCIETY_AGENT = 1;
+    	/**
+    	 * 代理人 ---- 集团代理人
+    	 */
+    	int GROUP_AGENT = 2; 
+    	
+    	/**
+    	 * 渠道人员 ---- 社会渠道老板
+    	 */
+    	int CHANNEL_BOSS = 3;
+    	/**
+    	 * 渠道人员 ---- 社会渠道店长
+    	 */
+    	int CHANNEL_SHOPOWN = 4;
+    	/**
+    	 * 渠道人员 ---- 社会渠道店员
+    	 */
+    	int CHANNEL_ASSISTANT = 5; 
+    	/**
+    	 * 渠道人员 ---- 普通营业员（自有）
+    	 */
+    	int CHANNEL_BUSIOWN = 6;
+    	/**
+    	 * 渠道人员 ---- 终端销售员（合作商）
+    	 */
+    	int CHANNEL_COOPOWN = 7;
+    	/**
+    	 * 渠道人员 ---- 普通营业员（合作商）
+    	 */
+    	//int CHANNEL_OUTOWN = 71;删除
+    	/**
+    	 * 渠道人员 ---- 普通营业员（外包）
+    	 */
+    	//int CHANNEL_TEMOWN = 72;删除
+    	/**
+    	 * 渠道人员 ---- 驻店经理（合作商）
+    	 */
+    	int CHANNEL_STOREMANAGER = 73;
+    	
+    	/**
+    	 * 渠道人员 ---- 值班经理
+    	 */
+    	int CHANNEL_DUTYMANAGER = 74;
+    	
+    	/**
+    	 * 销售经理 ---- 销售经理
+    	 */
+    	int SALE_MANAGER = 8;
+    	/**
+    	 * 销售经理 ---- 直供员
+    	 */
+    	int DIRECT_SALER = 9;
+    	/**
+    	 * 销售经理 ---- 渠道班长
+    	 */
+    	int CHANNEL_MONITOR = 15;
+    	
+    	/**
+    	 * 代理商 ---- 代理商
+    	 */
+    	int AGENCY_AGENCY = 10;
+    	/**
+    	 * 客服人员 ---- 接线员
+    	 */
+    	int CUSTOM_OPERATOR = 11;
+    	
+    	/**
+    	 * 自有渠道管理人员 ---- 营业督导
+    	 */
+    	int OWN_CHANNELOPER_SUPERVISOR  = 12;
+    	/**
+    	 * 自有渠道管理人员 ---- 营业店长
+    	 */
+    	int OWN_CHANNELOPER_OWN  = 13;
+    	/**
+    	 * 自有渠道管理人员 ---- 业务经理
+    	 */
+    	int OWN_CHANNELOPER_MANAGER  = 14;
+    }
+    
+    /**
+     * 导入文件工单状态
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface ImpOrder{
+    	String NON_PARSE = "0";//未处理
+    	String ING_PARSE = "1";//处理中
+    	String DONE_PARSE = "2";//已处理(无错误数据)
+    	String DONE_PARSE_FAIL = "4";//已处理(有错误数据)
+    	String ERR_PARSE = "3";//处理失败
+    }
+    
+    /**
+     * 预警模式
+     * @author        [libo6]
+     * @version        1.0
+     */
+    public interface WarnModel{
+    	String TB = "TB";//同比
+    	String HB = "HB";//环比
+    	String JZ = "JZ";//均值
+    	String FZ = "FZ";//阀值
+    	String YZ = "YZ";//阈值
+    	String MBZ = "MBZ";//目标值
+    	String TIME="TIME";
+    }
+    
+    /**
+     * 销售经理任务常量
+     * @author zhaochen
+     *
+     */
+    public interface ManagerMission{
+    	String MISSION_CONTENT = "MISSION_CONTENT";
+    	String MISSION_PHOTO = "MISSION_PHOTO";
+    	String MISSION_NOTE = "MISSION_NOTE";
+    	String NORMAL_CHK_ITEM_ID = "10000000";
+    	String QRY_ALL = "ALL";
+    	String QRY_COUNT = "COUNT";
+    	String LONGITUDE = "LONGITUDE";//经度
+    	String LATITUDE = "LATITUDE";//纬度
+    	String ADDRESS = "ADDRESS";
+    	String ADD_MISSION_BY_TYPE = "type";
+    	String ADD_MISSION_BY_NAME = "name";
+    	String ADD_MISSION_BY_IMP = "imp";
+    	String ADD_MISSION_BY_GROUP = "group";
+    	String ADD_MISSION_BY_MANAGER = "man";
+    	String ADD_MISSION_BY_CHNL_MANAGER = "chnlMan";
+    	String ADD_MISSION_BY_CHNL_OWER = "chnlOwer";
+    	String ADD_MISSION_BY_AREA_MANAGER = "areaMan";
+    	
+    	String ADD_MISSION_AUTO = "auto";
+    	String NEED_CHECK = "NEED_CHECK";
+    	String NEED_SCORE = "NEED_SCORE";
+    	String NEED_SMS = "NEED_SMS";
+    	String CHNL_FIRST_TYPE = "CHNL_FIRST_TYPE";
+    	String CHNL_SEC_TYPE = "CHNL_SEC_TYPE";
+    	String CHNL_THIRD_TYPE = "CHNL_THIRD_TYPE";
+    	String CHNL_STAR_LEVEL = "CHNL_STAR_LEVEL";
+    	String SMS_TEMPLATE = "MISSION_SMS_TEMPLATE";
+    	String BATCH_SIZE = "MISSION_BATCH_SIZE";
+    	String MISSION_SYNC_URL = "MISSION_SYNC_URL";
+    	String ADD_MISSION_TASK = "ADD_MISSION_TASK";
+    	String DEL_MISSION_TASK = "DEL_MISSION_TASK";
+    	String ADD_REGIONID = "ADD_REGIONID"; 
+    	String ADD_COUNTYID = "ADD_COUNTYID"; 
+    	String ADD_AREACODE = "ADD_AREACODE"; 
+    }
+    
+    /**
+     * 资料完整度字段配置枚举
+     * @author ljl
+     *
+     */
+    public interface DATA_COMP_RATE_CFG{
+    	String FIX_FIELD = "1";
+    	String FLOW_FIELD = "2";
+    }
+    
+    public interface CHNL_OPER_LOG_MODULE{
+    	String CHANNEL_BASE_INFO = "1001";//移动渠道基础信息修改
+    	String OPPONENT_BASE_INFO = "1002";//竞争对手渠道基础信息修改
+    	String BUSINESS_AREA = "1003";//商圈
+    	String CHANNEL_CHAIN_INFO = "1004";//连锁渠道
+    	String CHANNEL_OPER_INFO = "1005"; // 人员档案修改
+    }
+    
+    
+    /**
+     * 
+    * Copyright: Copyright (c) 2015 Asiainfo-Linkage
+    * 
+    * @ClassName: CMConstants.java
+    * @Description: 巡店报表配置常量
+    *
+    * @version: v1.0.0
+    * @author: chenkai7
+    * @date: 2015年8月14日 下午6:06:34 
+    *
+    * Modification History:
+    * Date         Author          Version            Description
+    *---------------------------------------------------------*
+    * 2015年8月14日     ChenKai           v1.0.0               修改原因
+     */
+    public interface CHNL_INSPECT_REPORT{
+    	
+    	/**
+    	 * 对应cmbase.bs_para_detail.para_type配置
+    	 */
+    	String PARA_TYPE = "CHNL_INSPECT_REPORT";
+    	
+    	/**
+    	 * 获取渠道类型
+    	 */
+    	String FIRST_ORG_TYPE = "FIRST_ORG_TYPE";
+    	String SEC_ORG_TYPE = "SEC_ORG_TYPE";
+    	String THIRD_ORG_TYPE = "THIRD_ORG_TYPE";
+    	
+    }
+    /**
+     * 
+     * <p>
+     * Copyright: Copyright (c) 2016<br>
+     * Company: Asiainfo Technologies （China）,Inc. Hangzhou<br>
+     * </p>
+     * <p>
+     * Description: 计件岗位类型
+     * </p>
+     * @version v1.0.0
+     * @author mahj3
+     * @date 2016年1月12日 下午2:42:27
+     *
+     */
+    public interface OBJ_TYPE{
+    	String FRONT_DESK_BUSI_0 = "0";				//前台业务受理
+    	String GUIDE_CONSULTING_1 = "1";			//引导咨询
+    	String DUTY_MANAGER_2 = "2";				//值班经理
+    	String COMPLAINT_RECEPTIONIST_3 = "3";		//投诉接待
+    	String SHOP_MANAGER_4 = "4";				//店长
+    	String DEPUTY_SHOP_MANAGER_5 = "5";			//代理店长
+    	String DEPUTY_DUTY_MANAGER_6 = "6";			//代理值班经理（兼职店长）
+    	String ACCOUNTANT_7 = "7";					//会员中心业务受理（账务员）
+    	String OTHER_8 = "8";						//其它
+    }
+	/**
+	 * Description: 人员档案，工作状态
+	 * @author mahj3
+	 * @date 2016年1月13日 下午2:50:47
+	 */
+    public interface WORK_STATUS{
+    	int IN_SERVICE = 1;			//在职
+    	int ENTRANT = 2;			//入职
+    	int HOLIDAY = 3;			//休假
+    	int LEAVE = 4;				//离职
+    	int TRAIN = 5;				//培训
+    	int PROBATION = 6;			//试用
+    }
+
+	/**
+	 * Description: 人员档案，用工性质
+	 * @author mahj3
+	 * @date 2016年1月13日 下午2:50:47
+	 */
+    public interface EMPLOYEE_NATURE{
+    	String CONTRACT = "1";			//合同制员工
+    	String DISPATCH = "2";			//劳务派遣员工
+    	String EPIBOLY = "3";			//劳务外包员工
+    	String PARTNER = "4";			//合作商员工
+    }
+    
+    /**
+     * Description: 人员档案，技能等级
+     * @author mahj3
+     * @date 2016年1月13日 下午2:50:47
+     */
+    public interface SKILL_LEVEL{
+    	String LEVEL_1 = "1";			//一星
+    	String LEVEL_2 = "2";			//二星
+    	String LEVEL_3 = "3";			//三星
+    	String LEVEL_4 = "4";			//四星
+    	String LEVEL_5 = "5";			//五星
+    }
+
+    /**
+     * 点位等级
+     */
+    public interface pointLevel{
+    	String LEVEL_1 = "1";			//金
+    	String LEVEL_2 = "2";			//银
+    	String LEVEL_3 = "3";			//铜
+    	String LEVEL_4 = "4";			//普通
+    }
+    
+    /**
+     * 点位版式
+     */
+    public interface pointModel{
+    	String MODEL_Y = "1";		//竖版
+    	String MODEL_X = "2";		//横版
+    }
+    
+    public interface commInfoOperate{
+    	String OPER_GUIDE = "1";//指导
+    	String OPER_REPLY = "2";//回复
+    	String OPER_FOLLOW = "3";//关注
+    }
+    
+    public interface commInfoOrderStatus{
+    	String RUNNING = "1";//待处理
+    	String COMPLETE = "2";//已处理
+    }
+    
+    public interface trackInfoType{
+    	String COMM_INFO = "1";//商业信息
+    	String WARN_ORDER = "2";//预警工单
+    }
+    
+    public interface qryParamType{
+        String TABLE_NAME = "TABLE";//表名
+        String DB_ID = "DBID";//数据源ID
+        String TAGET = "TAGET";// 标签
+        String VALUE = "VALUE";// 值
+        String SQL = "SQL";// 脚本        
+    }
+    
+    public interface qryParamTaget{
+        String TODAY = "TODAY";//当天，格式‘YYYY-MM-DD’
+        String CURRENT_USER="CURRENT_USER";//当前用户
+    }
+    
+    public interface qryParamOperChar{
+        String EQUAL = "equal";//等于
+        String IN = "in";// 包含
+        String LIKE = "like";// 模糊查询   
+    }
+    
+    public interface localSysOperator{
+    	String LOCAL_SYS_OPERATOR = "LOCAL_SYS_OPERATOR";
+    }
+    /**
+     * 
+     * @author 异动工单类型
+     *
+     */
+    public interface firstType{
+    	String SCYD = "600001";//市场异动
+    	String YWYD = "600002";//业务移动
+    }
+    public interface warnTypeId{
+    	String YWYDKPI = "900000";//业务移动考核指标
+    	String SCYDKPI ="600000";//市场移动考核指标 
+    }
+    
+    /**
+     * 地图标记点类型
+     * .
+     * 
+     * @copyright：asiainfo
+     * @author huangweichao
+     * @version Revision 1.0.0
+     * @see:
+     * @Create Date：2016-9-6
+     * @Funtion Description：
+     *
+     */
+	public interface pointType {
+		Long ALL = 0L;// 全部
+		Long GRID = 1L;// 网格
+		Long GROUP_CUSTOMER = 2L;// 集团客户
+		Long OWN_CHANNEL = 3L;// 自有渠道
+		Long SOCIAL_CHANNEL = 4L;// 社会渠道
+	}
+	
+	/**
+	 * 运营商类型
+	 */
+	public interface chnlOperType{
+	    String CMC = "1";// 移动
+	    String CUC = "2";// 联通
+	    String CTC = "3";// 电信
+	}
+	
+	/**
+	 * 一级渠道类型
+	 */
+	public interface firstOrgType{
+	    String CMC_OWNED_CHANNEL = "80001";
+	    String CMC_SOCIAL_CHANNEL = "80002,80003";	    
+	    String OPPONENT_OWNED_CHANNEL = "80058";
+	    String OPPONENT_SOCIAL_CHANNEL = "80060,80059";
+	}
+	
+	/**
+	 * 预警频率
+	 */
+	public interface warnPeriod{
+		String MONTH = "M";
+		String DAY = "D";
+	}
+	
+	/**
+	 * 预警级别，"1"：橙色 "2"：红色 
+	 */
+	public interface warnLevel{
+		String ORANGE = "1";
+		String RED = 	"2";
+	}
+	/**
+	 * 预警类型，2：红色 1：橙色
+	 */
+	public interface warnType{
+		int ORANGE = 1;
+		String ORANGE_NAME = "橙色";
+		int RED = 	2;
+		String RED_NAME = "红色";
+	}
+	
+	public interface oaFileType{
+		String OA_FILE_DIR_CODE = "0";//数据文件路径
+		String OA_DATA_CODE = "1";//指标汇总日表
+		String OA_FILE_FILE_TYPE = "OA_FLOW_DEST_REPLACE";
+		String OA_WORK_FLOW_ORDER_URL = "OA_WORK_FLOW_ORDER_URL"; //获取配置的代办工单url
+	}
+}

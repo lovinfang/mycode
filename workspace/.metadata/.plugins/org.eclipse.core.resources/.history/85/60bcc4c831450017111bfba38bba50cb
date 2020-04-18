@@ -1,0 +1,21 @@
+package com.task;
+
+import org.apache.log4j.Logger;
+
+public class DataConversionTask {
+
+	private static Logger log = Logger.getLogger(DataConversionTask.class);
+	public void run(){
+		log.debug(Thread.currentThread().getName()+" 任务开始执行：");
+		System.out.println(Thread.currentThread().getName()+" 任务开始执行：");
+		try {
+			log.debug(Thread.currentThread().getName()+" 任务执行中：");
+			System.out.println(Thread.currentThread().getName()+" 任务执行中：");
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		log.debug(Thread.currentThread().getName()+" 任务执行完成!");
+		System.out.println(Thread.currentThread().getName()+" 任务执行完成!");
+	}
+}

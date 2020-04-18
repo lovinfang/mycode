@@ -1,0 +1,1496 @@
+package com.asiainfo.cm.common.service.impl;
+
+import com.ai.appframe2.bo.DataContainer;
+import com.ai.appframe2.common.ServiceManager;
+import com.ai.appframe2.common.SessionManager;
+import com.ai.appframe2.complex.cache.CacheFactory;
+import com.ai.appframe2.privilege.UserInfoInterface;
+import com.ai.appframe2.service.ServiceFactory;
+import com.ai.appframe2.util.StringUtils;
+import com.ai.common.bo.BOBsStaticDataBean;
+import com.ai.common.ivalues.IBOBsDistrictValue;
+import com.ai.common.ivalues.IBOBsStaticDataValue;
+import com.ai.common.util.StaticDataUtil;
+import com.ai.secframe.common.Constants;
+import com.ai.secframe.common.service.interfaces.ISecframeFSV;
+import com.ai.secframe.extend.ivalues.IBOSecOrgAndExtValue;
+import com.ai.secframe.orgmodel.bo.BOSecStaffBean;
+import com.ai.secframe.orgmodel.bo.QBOSecOpStationOrgBean;
+import com.ai.secframe.orgmodel.ivalues.IBOSecOperatorValue;
+import com.ai.secframe.orgmodel.ivalues.IBOSecOrganizeValue;
+import com.ai.secframe.orgmodel.ivalues.IBOSecStaffValue;
+import com.ai.secframe.orgmodel.ivalues.IQBOSecOpStationOrgValue;
+import com.ai.secframe.orgmodel.service.interfaces.ISecOrganizeSV;
+import com.ai.secframe.sysmgr.ivalues.IBOSecRoleValue;
+import com.ailk.common.util.MD5Util;
+import com.asiainfo.appframe.ext.exeframe.fs.apis.interfaces.ISearch;
+import com.asiainfo.cm.common.bo.BOBsParaDetailBean;
+import com.asiainfo.cm.common.bo.BOOperatorLoginLogBean;
+import com.asiainfo.cm.common.bo.QBOSecOpStaffOrgStationRoleBean;
+import com.asiainfo.cm.common.cache.BsParaDetailCacheImpl;
+import com.asiainfo.cm.common.cache.CanQryChannelCacheImpl;
+import com.asiainfo.cm.common.constant.CMConstants;
+import com.asiainfo.cm.common.dao.interfaces.IBaseDAO;
+import com.asiainfo.cm.common.dao.interfaces.IBsStaticDataDAO;
+import com.asiainfo.cm.common.data.*;
+import com.asiainfo.cm.common.ivalues.IBOBaseBsParaDetailValue;
+import com.asiainfo.cm.common.ivalues.IBOBsOperationValue;
+import com.asiainfo.cm.common.ivalues.IBOBsParaDetailValue;
+import com.asiainfo.cm.common.service.interfaces.IBaseSV;
+import com.asiainfo.cm.common.util.*;
+import com.asiainfo.cm.exe.esb.client.util.SoapUtil;
+import com.asiainfo.cm.exe.esb.client.xmlmodel.ESB_BASE_SMS_PUSH_PUSH_001.request.BUSI_INFO;
+import com.asiainfo.cm.exe.esb.client.xmlmodel.ESB_BASE_SMS_PUSH_PUSH_001.request.SMS_INFO;
+import com.asiainfo.cm.exe.esb.client.xmlmodel.ESB_BASE_SMS_PUSH_PUSH_001.request.SMS_LIST;
+import com.asiainfo.cm.exe.esb.client.xmlmodel.common.RespParam;
+import com.asiainfo.cm.exe.remote.client.ChannelClientProxy;
+import com.asiainfo.cm.exe.ws.secoper.QueryOperInfoService;
+import com.asiainfo.cm.exe.ws.secoper.client.UapMainAcct;
+import com.asiainfo.cm.module.channelinfo.bo.QBOChannelChainAddPointBean;
+import com.asiainfo.cm.module.channelinfo.bo.QBOSimpleChnlInfoBean;
+import com.asiainfo.cm.module.channelinfo.data.BsStaticDataQryReq;
+import com.asiainfo.cm.module.common.util.LogUtils;
+import com.asiainfo.cm.module.fundpool.common.constant.AmsConst;
+import com.asiainfo.cm.module.homepage.orgoperator.services.interfaces.ISecBaseSV;
+import com.asiainfo.cm.module.personrelation.bo.QBOAllChnlAndManageBean;
+import com.asiainfo.cm.module.personrelation.bo.QBOChnlAndManageBean;
+import com.asiainfo.hncm.ext.common.constant.InfConstants;
+import com.asiainfo.hncm.ext.sms.bo.BOBSSOSMSNotifyTamplateBean;
+import com.asiainfo.hncm.ext.sms.bo.BOBSSOSMSNotifyTamplateEngine;
+import com.asiainfo.hncm.ext.sms.service.SMSSender;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.net.URLEncoder;
+import java.rmi.RemoteException;
+import java.util.*;
+import java.util.Map.Entry;
+
+public class BaseSVImpl implements IBaseSV {
+	private static transient Log log = LogFactory.getLog(BaseSVImpl.class);
+	
+	public IBOBsParaDetailValue[] getAllBsParaDetail() throws Exception,RemoteException {
+		IBaseDAO baseDao = (IBaseDAO)ServiceFactory.getService(IBaseDAO.class);
+		return baseDao.getAllBsParaDetail();
+	}
+	
+	public IBOBaseBsParaDetailValue[] getAllBaseBsParaDetail() throws Exception,RemoteException {
+		IBaseDAO baseDao = (IBaseDAO)ServiceFactory.getService(IBaseDAO.class);
+		return baseDao.getAllBaseBsParaDetail();
+	}
+	
+	public StaticData getStaticDataByCodeType(String codeType) throws Exception,RemoteException {
+		StaticData staticData=new StaticData();
+		List<BOBsStaticDataBean> list=new ArrayList<BOBsStaticDataBean>();
+		IBOBsStaticDataValue[] staticDataValues= (IBOBsStaticDataValue[])StaticDataUtil.getStaticData(codeType);
+		if (null != staticDataValues) {
+			Arrays.sort(staticDataValues, new Comparator() {
+				public int compare(Object o1, Object o2) {
+					int rtn = ((IBOBsStaticDataValue) o1).getSortId() - ((IBOBsStaticDataValue) o2).getSortId();
+
+					if (rtn == 0) {
+						return 0;
+					} else if (rtn > 0) {
+						return 1;
+					} else {
+						return -1;
+					}
+				}
+			});
+
+		BOBsStaticDataBean[] beans=new BOBsStaticDataBean[staticDataValues.length];
+		for (int j = 0; j < staticDataValues.length; j++) {
+			BOBsStaticDataBean bean=(BOBsStaticDataBean)staticDataValues[j];
+			beans[j]=bean;
+		}
+		list=Arrays.asList(beans);
+		staticData.setBeans(list);
+		}else
+		{
+			staticData.setBeans(new ArrayList<BOBsStaticDataBean>());
+		}
+		return staticData;
+	}
+
+	public StaticData getStaticDataFromDBByCodeType(BsStaticDataQryReq req) throws Exception,RemoteException {
+
+		StaticData staticData=new StaticData();
+		List<BOBsStaticDataBean> list=new ArrayList<BOBsStaticDataBean>();
+		IBaseDAO baseDao = (IBaseDAO)ServiceFactory.getService(IBaseDAO.class);
+		IBOBsStaticDataValue[] staticDataValues1= baseDao.getStaticData1(req.getBean().getCodeType());
+		staticData.setTotal(staticDataValues1.length);
+		int start=req.getStart();
+		int end=req.getEnd();
+		IBOBsStaticDataValue[] staticDataValues= baseDao.getStaticData(req.getBean().getCodeType(),start,end);
+
+
+		if (null != staticDataValues) {
+			BOBsStaticDataBean[] beans=new BOBsStaticDataBean[staticDataValues.length];
+
+			for (int j = 0; j < staticDataValues.length; j++) {
+				BOBsStaticDataBean bean=(BOBsStaticDataBean)staticDataValues[j];
+				beans[j]=bean;
+			}
+			list=Arrays.asList(beans);
+			staticData.setBeans(list);
+
+		}else
+		{
+			staticData.setBeans(new ArrayList<BOBsStaticDataBean>());
+		}
+		return staticData;
+	}
+
+	public boolean delStaticDataByCodeType(StaticData req) throws Exception,RemoteException {
+		if (null != req
+				&& CollectionUtils.isNotEmpty(req.getBeans())) {
+			BOBsStaticDataBean[] beanArr = new BOBsStaticDataBean[req
+					.getBeans().size()];
+			try {
+				IBsStaticDataDAO  dao = (IBsStaticDataDAO)ServiceFactory.getService(IBsStaticDataDAO.class);
+				dao.delBsStaticDataByCodeTypeAndCodeValue(((req.getBeans()).toArray(beanArr)));
+
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public StaticData saveStoreTypeMaintainStaticDataByCodeType(StaticData req) throws Exception,RemoteException{
+		IBsStaticDataDAO  iBsStaticDataDao = (IBsStaticDataDAO)ServiceFactory.getService(IBsStaticDataDAO.class);
+		StaticData staticData=new StaticData();
+		if (null != req
+				&& CollectionUtils.isNotEmpty(req.getBeans())) {
+			BOBsStaticDataBean[] beanArr = new BOBsStaticDataBean[req.getBeans().size()];
+			staticData = iBsStaticDataDao.saveStoreStyleMaintainBsStaticDataByCodeType(req, req.getStart(), req.getEnd(), false);
+
+		}
+		return staticData;
+	}
+
+
+	public BOBsStaticDataBean getStaticDataByCodeType(String codeType,String codeTypeAlias,String codeValue) throws Exception,RemoteException {
+		List<BOBsStaticDataBean> list=new ArrayList<BOBsStaticDataBean>();
+		IBOBsStaticDataValue[] staticDataValues= (IBOBsStaticDataValue[])StaticDataUtil.getStaticData(codeType);
+		if(staticDataValues!=null&&staticDataValues.length>0){
+			for(int i=0;i<staticDataValues.length;i++){
+				if(codeTypeAlias.equals(staticDataValues[i].getCodeTypeAlias())){
+					list.add((BOBsStaticDataBean)staticDataValues[i]);
+				}
+			}
+		}
+		Iterator<BOBsStaticDataBean> iterator=list.iterator();
+		BOBsStaticDataBean retBean=null; 
+		while(iterator.hasNext()){
+			BOBsStaticDataBean bean=iterator.next();
+			if(codeValue.equals(bean.getCodeValue())){
+				retBean=bean;
+				break;
+			}
+		}
+		return retBean;
+	}
+	
+	public ParaDetail getParaDetail(String regionId,String paraType,String paraCode) throws Exception,RemoteException {
+		IBOBsParaDetailValue[] paraDetailValues= ParaDetailUtil.getParaDetailValues(regionId, paraType, paraCode);
+		List<BOBsParaDetailBean> list=new ArrayList<BOBsParaDetailBean>();
+		if (paraDetailValues!=null&&paraDetailValues.length>0) {
+			for (int i = 0; i < paraDetailValues.length; i++) {
+				list.add((BOBsParaDetailBean)paraDetailValues[i]);
+			}
+		}
+		ParaDetail paraDetail=new ParaDetail();
+		paraDetail.setBeans(list);
+		return paraDetail;
+	}
+	
+	
+	/**
+	 * 获取模糊搜索标记位
+	 * 废弃，走lucene
+	 * @return
+	 * @throws Exception 
+	 * @throws java.rmi.RemoteException
+	 */
+	public String getQryChannelFlag() throws RemoteException, Exception {
+		String flag="0";
+		int orgseq=SessionUtil.getOrgSeq();
+		if (CMConstants.ORG_SEQ.PROVINCE==orgseq||CMConstants.ORG_SEQ.REGION==orgseq) {
+			String isLoad="0";
+			IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "CACHE", "CHANNEL_SEARCH");
+			if (bsParaDetailValues!=null&&bsParaDetailValues.length>0) {
+				isLoad=bsParaDetailValues[0].getPara3();
+				flag=bsParaDetailValues[0].getPara4();
+			}
+		}else {
+			flag="2";
+		}
+		return flag;
+	}
+	
+	/**
+	 * 查询可以搜索的渠道信息(省公司、地市)
+	 * 废弃，走lucene
+	 * @return
+	 * @throws Exception 
+	 * @throws java.rmi.RemoteException
+	 */
+	public List<QBOSimpleChnlInfoBean> getCanQryChannel(String keyword) throws RemoteException, Exception {
+		if (log.isErrorEnabled()) {
+			log.error("模糊搜索keyword:"+keyword);
+		}
+		String regionId=String.valueOf(SessionManager.getUser().get("REGION_ID"));
+		//省公司查杭州地市数据
+		/*if (SessionUtil.isProvinceOperator()) {
+			regionId="000";
+		}*/
+		int length=keyword.length();
+		String cacheKey=regionId+"$1$"+length;
+		if (isEnglish(keyword)) {
+			cacheKey=regionId+"$2$"+length;
+		}
+		Map map=(Map)CacheFactory.get(CanQryChannelCacheImpl.class, cacheKey);
+		List<QBOSimpleChnlInfoBean> list=null;
+		if (map!=null) {
+			 list=(List<QBOSimpleChnlInfoBean>)map.get(keyword);
+		}
+		if (list==null) {
+			list=new ArrayList<QBOSimpleChnlInfoBean>();
+		}
+		return list;
+	}
+	
+	/**
+	 * 查询可以搜索的渠道信息（县市及以下）
+	 * 废弃，走lucene
+	 * @return
+	 * @throws Exception 
+	 * @throws java.rmi.RemoteException
+	 */
+	public List<QBOSimpleChnlInfoBean> getCanQryChannel2() throws RemoteException, Exception {
+		return SessionUtil.getCanQryChannel();
+	}
+	
+	/**
+	 * 调用fs框架做模糊搜索
+	 */
+	public List<QBOSimpleChnlInfoBean> searchChnlInfo(String chnlName)  throws RemoteException, Exception {
+		if (log.isErrorEnabled()) {
+			log.error("启动Lucene搜索渠道，key："+chnlName);
+		}
+		boolean flag=false;//是否搜索标志
+		StringBuffer condition = new StringBuffer();
+		if (StringUtil.isNotEmpty(chnlName)) {
+			flag=true;
+			chnlName=chnlName.toUpperCase();
+			//condition.append(" AND");
+			condition.append(" (ORGANIZE_NAME").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_ID").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_JP").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_QP").append(":\"").append(chnlName + "\")");
+		}
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		if (flag) {
+			int orgSeq=SessionUtil.getOrgSeq();
+			String roleSeq=SessionUtil.getRoleSeq();
+			if (orgSeq==CMConstants.ORG_SEQ.REGION) {
+				//地市
+				String regionId=String.valueOf(ServiceManager.getUser().get("REGION_ID"));
+				condition.append("  AND  (REGION_CODE ").append(":\"").append(regionId + "\"").append(")");
+			}else if (orgSeq==CMConstants.ORG_SEQ.COUNTY) {
+				//县市
+				String countyId=String.valueOf(ServiceManager.getUser().get("COUNTY_ID"));
+				if(this.isEnglish(countyId.substring(3))){
+					countyId=countyId.substring(0,3)+(int)countyId.substring(3).toLowerCase().charAt(0);
+				}
+				condition.append("  AND  (COUNTY_CODE ").append(":\"").append(countyId + "\"").append(")");
+			}else if (orgSeq==CMConstants.ORG_SEQ.AREA) {
+				//片区
+				if (String.valueOf(SessionManager.getUser().get("ORG_CHANNEL_TYPE")).equals("1")
+						|| ("80001".equals(String.valueOf(SessionManager.getUser().get("ORG_CHANNEL_TYPE"))) && roleSeq
+								.equals(CMConstants.ROLE_SEQ.AREA))) {
+					//当角色序列为片区级别，而登陆组织为片区以上时，应该放开片区的选择
+					//供应链暂时只支持将白卡提供到营业厅，管理组织无法使用卡号订购卖白卡.所以让有特殊角色的营业厅能登录渠道管理系统,开放片区选择
+					String countyId=String.valueOf(ServiceManager.getUser().get("COUNTY_ID"));
+					if(this.isEnglish(countyId.substring(3))){
+						countyId=countyId.substring(0,3)+(int)countyId.substring(3).toLowerCase().charAt(0);
+					}
+					condition.append("  AND  (COUNTY_CODE ").append(":\"").append(countyId + "\"").append(")");
+				}else{
+					String areaId=String.valueOf(ServiceManager.getUser().getOrgId());
+					condition.append("  AND  (AREA_ID ").append(":\"").append(areaId + "\"").append(")");
+				}
+				
+			}
+			if(!("").equals(condition)){//add by bianwf 2015-06-11
+				condition.append(" AND (STATE ").append(":\"").append("1\"").append(")");;
+			}
+			list=searchFromFS(condition.toString(),null);
+		}
+		return list;
+
+	}
+	
+	
+	private List<QBOSimpleChnlInfoBean> searchFromFS(String querySql,String employeeId) throws Exception{
+		ISearch search = null;
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		try{
+			//最大返回数量，默认100
+			long maxRetCount=100L;
+			IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "LUCENE_QRY", "MAX_RET_COUNT");
+			if (bsParaDetailValues!=null&&bsParaDetailValues.length>0) {
+				maxRetCount=Long.valueOf(bsParaDetailValues[0].getPara1());
+			}
+			search = (ISearch) ChannelClientProxy.getObject(ISearch.class);
+			Map[] result$array_map = search.search("CHANNEL_INFO", querySql.toString(), -1, -1);
+			if (result$array_map!=null&&result$array_map.length>0) {
+				Set<Long> chnlset=new HashSet<Long>();
+				List<QBOChnlAndManageBean> chnlList=SessionUtil.cofManagerList(employeeId);
+				if (chnlList!=null&&chnlList.size()>0) {
+					for (int i = 0; i < chnlList.size(); i++) {
+						QBOChnlAndManageBean qBOChnlAndManageBeanChnl=(QBOChnlAndManageBean)chnlList.get(i);
+						chnlset.add(qBOChnlAndManageBeanChnl.getOrganizeId());
+					}
+				}else {
+					String roleSeq=SessionUtil.getRoleSeq();
+					if (!StringUtil.isEmpty(roleSeq)&&CMConstants.ROLE_SEQ.SALER.equals(roleSeq)) {
+						return list;
+					}
+				}
+				for (int i = 0; i < result$array_map.length; i++) {
+					if (list.size()>=maxRetCount) {
+						break;
+					}
+					QBOSimpleChnlInfoBean qboSimpleChnlInfoBean=new QBOSimpleChnlInfoBean();
+                    if (chnlset!=null&&chnlset.size()>0) {
+                    	
+                    	String organizeId=String.valueOf(result$array_map[i].get("ORGANIZE_ID"));
+                    	if (!chnlset.contains(Long.valueOf(organizeId))) {
+							continue;
+						}
+					}
+					qboSimpleChnlInfoBean.setOrganizeId(Long.valueOf(String.valueOf(result$array_map[i].get("ORGANIZE_ID"))));
+					qboSimpleChnlInfoBean.setOrganizeName(String.valueOf(result$array_map[i].get("ORGANIZE_NAME")));
+					qboSimpleChnlInfoBean.setOrgChannelType(Long.valueOf(String.valueOf(result$array_map[i].get("ORG_CHANNEL_TYPE"))));
+					qboSimpleChnlInfoBean.setSecOrgType(Long.valueOf(String.valueOf(result$array_map[i].get("SEC_ORG_TYPE"))));
+					list.add(qboSimpleChnlInfoBean);
+				}
+			}
+		}catch(Exception ex){
+			if (log.isErrorEnabled()) {
+				log.error(ex.getMessage(),ex);
+			}
+		}
+		finally{
+			if(null!=search){
+				ChannelClientProxy.destroyObject(search);
+			}
+			return list;
+		}
+		
+	}
+	
+	private List<QBOSimpleChnlInfoBean> searchALLFromFS(String querySql,String employeeId) throws Exception{
+		ISearch search = null;
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		try{
+			//最大返回数量，默认100
+			long maxRetCount=100L;
+			IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "LUCENE_QRY", "MAX_RET_COUNT");
+			if (bsParaDetailValues!=null&&bsParaDetailValues.length>0) {
+				maxRetCount=Long.valueOf(bsParaDetailValues[0].getPara1());
+			}
+			search = (ISearch) ChannelClientProxy.getObject(ISearch.class);
+			Map[] result$array_map = search.search("CHANNEL_INFO", querySql.toString(), -1, -1);
+			if (result$array_map!=null&&result$array_map.length>0) {
+				Set<Long> chnlset=new HashSet<Long>();
+				List<QBOAllChnlAndManageBean> chnlList=SessionUtil.cofManagerAllList(employeeId);
+				if (chnlList!=null&&chnlList.size()>0) {
+					for (int i = 0; i < chnlList.size(); i++) {
+						QBOAllChnlAndManageBean qBOChnlAndManageBeanChnl=(QBOAllChnlAndManageBean)chnlList.get(i);
+						chnlset.add(qBOChnlAndManageBeanChnl.getOrganizeId());
+					}
+				}else {
+					String roleSeq=SessionUtil.getRoleSeq();
+					if (!StringUtil.isEmpty(roleSeq)&&CMConstants.ROLE_SEQ.SALER.equals(roleSeq)) {
+						return list;
+					}
+				}
+				for (int i = 0; i < result$array_map.length; i++) {
+					if (list.size()>=maxRetCount) {
+						break;
+					}
+					QBOSimpleChnlInfoBean qboSimpleChnlInfoBean=new QBOSimpleChnlInfoBean();
+                    if (chnlset!=null&&chnlset.size()>0) {
+                    	
+                    	String organizeId=String.valueOf(result$array_map[i].get("ORGANIZE_ID"));
+                    	if (!chnlset.contains(Long.valueOf(organizeId))) {
+							continue;
+						}
+					}
+					qboSimpleChnlInfoBean.setOrganizeId(Long.valueOf(String.valueOf(result$array_map[i].get("ORGANIZE_ID"))));
+					qboSimpleChnlInfoBean.setOrganizeName(String.valueOf(result$array_map[i].get("ORGANIZE_NAME")));
+					qboSimpleChnlInfoBean.setOrgChannelType(Long.valueOf(String.valueOf(result$array_map[i].get("ORG_CHANNEL_TYPE"))));
+					qboSimpleChnlInfoBean.setSecOrgType(Long.valueOf(String.valueOf(result$array_map[i].get("SEC_ORG_TYPE"))));
+					list.add(qboSimpleChnlInfoBean);
+				}
+			}
+		}catch(Exception ex){
+			if (log.isErrorEnabled()) {
+				log.error(ex.getMessage());
+			}
+		}
+		finally{
+			if(null!=search){
+				ChannelClientProxy.destroyObject(search);
+			}
+			return list;
+		}
+		
+	}
+	/**
+	 * 根据角色返回首页地址
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public String getHomePage(String isEncode) throws RemoteException, Exception{
+		String url= SessionUtil.getCmHomePage();
+		if ("1".equals(isEncode)) {
+			url=URLEncoder.encode(url);
+		}
+		return url;
+	}
+	
+	
+	/**
+	 * 获取用户组织相关信息
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public UserOrgInfoDO getUserOrgInfo() throws RemoteException, Exception{
+		UserOrgInfoDO userdo = new UserOrgInfoDO();
+		UserInfoInterface userInfoInterface=SessionManager.getUser();
+
+		//用户级别
+		String roleseq=SessionUtil.getRoleSeq();
+		userdo.setOrgseq(SessionUtil.getOrgSeq());
+		userdo.setRoleseq(roleseq);
+		//组织
+		long orgid = userInfoInterface.getOrgId();
+		String orgname = userInfoInterface.getOrgName();
+		String stationId = String.valueOf(userInfoInterface.get("LOGIN_STATION_ID"));
+		userdo.setOrgid(orgid);
+		userdo.setOrgname(orgname);
+		userdo.setStationId(stationId);
+
+		//用户名称
+		long userid = userInfoInterface.getID();
+		String username = userInfoInterface.getName();
+		userdo.setUserid(userid);
+		userdo.setUsername(username);
+		userdo.setCode(userInfoInterface.getCode());
+		userdo.setFirstChannelType(String.valueOf(userInfoInterface.get("ORG_CHANNEL_TYPE")));
+
+		String regionId = "";
+		String regionName = "";
+		String countyId = "";
+		String countyName = "";
+
+		if(CMConstants.ROLE_SEQ.PROVINCE.equals(roleseq)){
+			regionId="000";
+			regionName="省移动总公司";
+		} else if(CMConstants.ROLE_SEQ.REGION.equals(roleseq)){
+			//地市
+			regionId = userInfoInterface.get(Constants.REGION_ID).toString();
+			regionName = RegionUtil.getRegionNameByRegionId(regionId);
+		} else if(CMConstants.ROLE_SEQ.COUNTY.equals(roleseq)){
+			//县市
+			countyId = userInfoInterface.get(Constants.COUNTY_ID).toString();
+			countyName = RegionUtil.getCountyNameByCountyId(countyId);
+			String countyDistrictId = userInfoInterface.get("COUNTY_DISTRICT_ID").toString();
+			long regionCode  = RegionUtil.getDistrictValueByDistrictId(Long.valueOf(countyDistrictId)).getParentDistrictId();
+			regionId = RegionUtil.getRegionIdByDistrictId(regionCode);
+			regionName = RegionUtil.getRegionNameByRegionId(regionId);
+		} else if(CMConstants.ROLE_SEQ.AREA.equals(roleseq)||CMConstants.ROLE_SEQ.SALER.equals(roleseq)){
+            String countyDistrictId = userInfoInterface.get("COUNTY_DISTRICT_ID").toString();
+            IBOBsDistrictValue value = RegionUtil.getDistrictValueByDistrictId(Long.valueOf(countyDistrictId));
+		    //县市
+            countyId = value.getRegionId();
+			countyName = RegionUtil.getCountyNameByCountyId(countyId);
+			//地市
+			regionId = RegionUtil.getRegionIdByDistrictId(value.getParentDistrictId());
+			regionName = RegionUtil.getRegionNameByRegionId(regionId);
+			//片区
+			String channelType = String.valueOf(SessionManager.getUser().get("ORG_CHANNEL_TYPE"));
+			if(channelType.startsWith("8000")){
+				ISecframeFSV secframeFSV= (ISecframeFSV)ServiceFactory.getService(ISecframeFSV.class);
+				IBOSecOrgAndExtValue orgAndExtValue= secframeFSV.qrySecOrganizeById(SessionManager.getUser().getOrgId()+"");
+				if(orgAndExtValue!=null){
+					userdo.setAreaid(orgAndExtValue.getParentOrganizeId());
+					userdo.setAreaname(DisplayNameUtil.getOrgNameByOrgId(orgAndExtValue.getParentOrganizeId()));
+				}
+			}else{
+				userdo.setAreaid(orgid);
+				userdo.setAreaname(orgname);
+			}
+		}
+
+		userdo.setRegionid(regionId);
+		userdo.setRegionname(regionName);
+		userdo.setCountyid(countyId);
+		userdo.setCountyname(countyName);
+
+		return userdo;
+	}
+	
+	/** 
+	   * 是否是英文 
+	   * @param
+	   * @return 
+	   */ 
+	public static boolean isEnglish(String charaString){ 
+	      return charaString.matches("^[a-zA-Z]*"); 
+	    } 
+	   
+	public String[] hasOperatePermission(String paraCode,boolean isEntity) throws RemoteException, Exception{
+		String[] security = {"1", "1"};
+		String[] paraCodes = {paraCode, paraCode + 2};
+		
+		if (StringUtil.isEmpty(paraCode)) {
+			return security;
+		}
+		ISecframeFSV secframeFSV = (ISecframeFSV) ServiceFactory.getService(ISecframeFSV.class);
+		long stationId = Long.valueOf(String.valueOf(ServiceManager.getUser().get("LOGIN_STATION_ID")));
+		for(int i = 0; i < 2; i ++){
+			IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "OPERATE_PERMISSION", paraCodes[i]);
+			if (bsParaDetailValues!=null&&bsParaDetailValues.length>0) {
+				if ("1".equals(bsParaDetailValues[0].getPara1())) {//1表示开关打开，0表示开关未开，未开返回security{"1","1"}
+					//判断实体权限
+					
+					boolean hasPermission=false;
+						
+					if (isEntity) {
+						 hasPermission = secframeFSV.checkEntityPermission2(SessionManager.getUser().getID(),Long.valueOf(bsParaDetailValues[0].getPara2()), 1L, stationId);
+						 
+					}else {
+						hasPermission=secframeFSV.checkMenuPermission(ServiceManager.getUser().getID(), 1L, Long.valueOf(bsParaDetailValues[0].getPara2()));
+					}
+					if (!hasPermission) {
+						security[i] = "0";
+					}
+				}
+			}
+		}
+		return security;
+   }
+	
+	/**
+	 * 判断有无模糊搜索框权限
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public String hasComplexQryPermission() throws RemoteException, Exception{
+		String flag=String.valueOf(ServiceManager.getUser().get(CMConstants.SESSION.COMPLEX_QRY_PERMISSION));
+		return flag;
+	}
+	
+	public IBOSecRoleValue[] getSecRolesByOpStationId(long opStationId)
+            throws Exception, RemoteException
+        {
+	    long t0=System.currentTimeMillis();
+    		ISecframeFSV secframeFSV=(ISecframeFSV) ServiceFactory.getService(ISecframeFSV.class);
+    		IBOSecRoleValue [] roles=secframeFSV.getSecRolesByOpStationId(opStationId);
+    		log.error("myrole======="+roles.length+"=====>"+(System.currentTimeMillis()-t0));
+            return roles;
+        }
+	
+	public List<StaticData> getStaticDataByCodeTypes(StaticDataReq req) throws Exception,RemoteException{
+		List<String> codeTypes = new ArrayList<String>();
+		codeTypes = req.getCodeTypes();
+		List<StaticData> staticDatas = new ArrayList<StaticData>();
+		for(int i = 0; i < codeTypes.size(); i++){
+			String codeType = codeTypes.get(i);
+			log.error("codeType==="+codeType);
+			StaticData staticData=new StaticData();
+			List<BOBsStaticDataBean> list=new ArrayList<BOBsStaticDataBean>();
+			IBOBsStaticDataValue[] staticDataValues= (IBOBsStaticDataValue[])StaticDataUtil.getStaticData(codeType);
+			if (null != staticDataValues && staticDataValues.length > 0){
+				Arrays.sort(staticDataValues, new Comparator(){
+					public int compare(Object o1, Object o2) {
+						int rtn = ((IBOBsStaticDataValue)o1).getSortId()-((IBOBsStaticDataValue)o2).getSortId();
+						if(rtn ==0){
+							return 0;
+						}else if(rtn>0){
+							return 1;
+						}else {
+							return -1;
+						}
+					}
+				  	});
+				BOBsStaticDataBean[] beans=new BOBsStaticDataBean[staticDataValues.length];
+				for (int j = 0; j < staticDataValues.length; j++) {
+					BOBsStaticDataBean bean=(BOBsStaticDataBean)staticDataValues[j];
+					beans[j]=bean;
+				}
+				list=Arrays.asList(beans);
+				staticData.setBeans(list);
+				staticDatas.add(staticData);
+			}
+		}
+		return staticDatas;
+	}
+
+
+	public List<QBOSimpleChnlInfoBean> searchChnlInfoByCondition(String chnlName,String regionCode,String countyCode,String areaCode,String employeeId)  throws RemoteException, Exception{
+		if (log.isErrorEnabled()) {
+			log.error("启动Lucene搜索渠道，key："+chnlName);
+		}
+		boolean flag=false;//是否搜索标志
+		StringBuffer condition = new StringBuffer();
+		if (StringUtil.isNotEmpty(chnlName)) {
+			flag=true;
+			chnlName=chnlName.toUpperCase();
+			//condition.append(" AND");
+			condition.append(" (ORGANIZE_NAME").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_ID").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_JP").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_QP").append(":\"").append(chnlName + "\")");
+		}
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		if (flag) {
+			if (!StringUtil.isBlank(regionCode)) {
+				//地市
+				condition.append("  AND  (REGION_CODE ").append(":\"").append(regionCode + "\"").append(")");
+			}
+            if(!StringUtil.isBlank(countyCode)) {
+				//县市
+            	if(this.isEnglish(countyCode.substring(3))){
+					countyCode=countyCode.substring(0,3)+(int)countyCode.substring(3).toLowerCase().charAt(0);
+				}
+				condition.append("  AND  (COUNTY_CODE ").append(":\"").append(countyCode + "\"").append(")");
+			}
+            if (!StringUtil.isBlank(areaCode)) {
+				//片区
+				condition.append("  AND  (AREA_ID ").append(":\"").append(areaCode + "\"").append(")");
+			}
+            condition.append(" AND (SEC_ORG_TYPE ").append(":\"").append(800021 + "\"").append(")");
+            if(!("").equals(condition)){//add by bianwf 2015-06-11
+				condition.append(" AND (STATE ").append(":\"").append("1\"").append(")");;
+			}
+			list=searchFromFS(condition.toString(),employeeId);
+		}
+		return list;
+	}
+	public List<QBOSimpleChnlInfoBean> searchChnlInfoByChnlType(String chnlName,String regionCode,String countyCode,String areaCode,String employeeId,String[] chnlType)  throws RemoteException, Exception{
+		if (log.isErrorEnabled()) {
+			log.error("启动Lucene搜索渠道，key："+chnlName);
+		}
+		boolean flag=false;//是否搜索标志
+		StringBuffer condition = new StringBuffer();
+		if (StringUtil.isNotEmpty(chnlName)) {
+			flag=true;
+			chnlName=chnlName.toUpperCase();
+			//condition.append(" AND");
+			condition.append(" (ORGANIZE_NAME").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_ID").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_JP").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_QP").append(":\"").append(chnlName + "\")");
+		}
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		if (flag) {
+			if (!StringUtil.isBlank(regionCode)) {
+				//地市
+				condition.append("  AND  (REGION_CODE ").append(":\"").append(regionCode + "\"").append(")");
+			}
+			if(!StringUtil.isBlank(countyCode)) {
+				//县市
+				if(this.isEnglish(countyCode.substring(3))){
+					countyCode=countyCode.substring(0,3)+(int)countyCode.substring(3).toLowerCase().charAt(0);
+				}
+				condition.append("  AND  (COUNTY_CODE ").append(":\"").append(countyCode + "\"").append(")");
+			}
+			if (!StringUtil.isBlank(areaCode)) {
+				//片区
+				condition.append("  AND  (AREA_ID ").append(":\"").append(areaCode + "\"").append(")");
+			}
+			
+			if (chnlType!=null&&chnlType.length>0) {
+				condition.append("  AND  (ORG_CHANNEL_TYPE ").append(":\"").append(chnlType[0] + "\"");
+				for (int i = 1; i < chnlType.length; i++) {
+					condition.append(" OR ORG_CHANNEL_TYPE").append(":\"").append(chnlType[i] + "\"");
+				}
+				condition.append(")");
+			}
+			if(!("").equals(condition)){//add by bianwf 2015-06-11
+				condition.append(" AND (STATE ").append(":\"").append("1\"").append(")");;
+			}
+			list=searchFromFS(condition.toString(),employeeId);
+		}
+		return list;
+	}
+	
+	public List<QBOSimpleChnlInfoBean> searchAllChnlByChnlType(String chnlName,String regionCode,String countyCode,String areaCode,String employeeId,String[] chnlType)  throws RemoteException, Exception{
+		if (log.isErrorEnabled()) {
+			log.error("启动Lucene搜索渠道，key："+chnlName);
+		}
+		boolean flag=false;//是否搜索标志
+		StringBuffer condition = new StringBuffer();
+		if (StringUtil.isNotEmpty(chnlName)) {
+			flag=true;
+			chnlName=chnlName.toUpperCase();
+			//condition.append(" AND");
+			condition.append(" (ORGANIZE_NAME").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_ID").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_JP").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_QP").append(":\"").append(chnlName + "\")");
+		}
+		List list= new ArrayList<QBOSimpleChnlInfoBean>();
+		if (flag) {
+			if (!StringUtil.isBlank(regionCode)) {
+				//地市
+				condition.append("  AND  (REGION_CODE ").append(":\"").append(regionCode + "\"").append(")");
+			}
+			if(!StringUtil.isBlank(countyCode)) {
+				//县市
+				if(this.isEnglish(countyCode.substring(3))){
+					countyCode=countyCode.substring(0,3)+(int)countyCode.substring(3).toLowerCase().charAt(0);
+				}
+				condition.append("  AND  (COUNTY_CODE ").append(":\"").append(countyCode + "\"").append(")");
+			}
+			if (!StringUtil.isBlank(areaCode)) {
+				//片区
+				condition.append("  AND  (AREA_ID ").append(":\"").append(areaCode + "\"").append(")");
+			}
+			
+			if (chnlType!=null&&chnlType.length>0) {
+				condition.append("  AND  (ORG_CHANNEL_TYPE ").append(":\"").append(chnlType[0] + "\"");
+				for (int i = 1; i < chnlType.length; i++) {
+					condition.append(" OR ORG_CHANNEL_TYPE").append(":\"").append(chnlType[i] + "\"");
+				}
+				condition.append(")");
+			}
+			list=searchALLFromFS(condition.toString(),employeeId);
+		}
+		return list;
+	}
+	
+	/**
+	 * 记录操作员登陆日志
+	 * @param bean
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public void saveOpLoginLog(BOOperatorLoginLogBean bean) throws RemoteException,Exception {
+		IBaseDAO baseDAO=(IBaseDAO)ServiceFactory.getService(IBaseDAO.class);
+		bean.setCreateDate(ServiceManager.getOpDateTime());
+		baseDAO.saveOpLoginLog(bean);
+	}
+	
+	private List<QBOChannelChainAddPointBean> searchChainPoitFromFS(String querySql) throws Exception{
+		ISearch search = null;
+		List<QBOChannelChainAddPointBean> list= new ArrayList<QBOChannelChainAddPointBean>();
+		try{
+			//最大返回数量，默认100
+			long maxRetCount=100L;
+			IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "LUCENE_QRY", "MAX_RET_COUNT");
+			if (bsParaDetailValues!=null&&bsParaDetailValues.length>0) {
+				maxRetCount=Long.valueOf(bsParaDetailValues[0].getPara1());
+			}
+			search = (ISearch) ChannelClientProxy.getObject(ISearch.class);
+			Map[] result$array_map = search.search("CHANNEL_INFO", querySql.toString(), -1, -1);
+			if (result$array_map!=null&&result$array_map.length>0) {
+				for (int i = 0; i < result$array_map.length; i++) {
+					if (i>=maxRetCount) {
+						break;
+					}
+					QBOChannelChainAddPointBean qBOChannelChainAddPointBean=new QBOChannelChainAddPointBean();
+					qBOChannelChainAddPointBean.setOrganizeId(Long.valueOf(String.valueOf(result$array_map[i].get("ORGANIZE_ID"))));
+					qBOChannelChainAddPointBean.setOrganizeName(String.valueOf(result$array_map[i].get("ORGANIZE_NAME")));
+					qBOChannelChainAddPointBean.setOrgChannelType(Long.valueOf(String.valueOf(result$array_map[i].get("ORG_CHANNEL_TYPE"))));
+					qBOChannelChainAddPointBean.setSecOrgType(Long.valueOf(String.valueOf(result$array_map[i].get("SEC_ORG_TYPE"))));
+					qBOChannelChainAddPointBean.setChainOrgId(Long.valueOf(String.valueOf(result$array_map[i].get("CHAIN_ORG_ID"))));
+					list.add(qBOChannelChainAddPointBean);
+				}
+			}
+		}catch(Exception ex){
+			if (log.isErrorEnabled()) {
+				log.error(ex.getMessage());
+			}
+		}
+		finally{
+			if(null!=search){
+				ChannelClientProxy.destroyObject(search);
+			}
+			return list;
+		}
+	}
+	
+	public List<QBOChannelChainAddPointBean> searchChainPoint(String chnlName,String regionCode)  throws RemoteException, Exception{
+		if (log.isErrorEnabled()) {
+			log.error("启动Lucene搜索渠道，key："+chnlName);
+		}
+		boolean flag=false;//是否搜索标志
+		StringBuffer condition = new StringBuffer();
+		if (StringUtil.isNotEmpty(chnlName)) {
+			flag=true;
+			chnlName=chnlName.toUpperCase();
+			//condition.append(" AND");
+			condition.append(" (ORGANIZE_NAME").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_ID").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_JP").append(":\"").append(chnlName + "\"");
+			condition.append(" OR ");
+			condition.append(" ORGANIZE_NAME_QP").append(":\"").append(chnlName + "\")");
+		}
+		List<QBOChannelChainAddPointBean> list= new ArrayList<QBOChannelChainAddPointBean>();
+		if (flag) {
+			if (!StringUtil.isBlank(regionCode)) {
+				//地市
+				condition.append("  AND  (REGION_CODE ").append(":\"").append(regionCode + "\"").append(")");
+			}
+            condition.append(" AND ((ORG_CHANNEL_TYPE ").append(":\"").append(80002 + "\"");
+            condition.append(" AND SEC_ORG_TYPE ").append(":\"").append(800021 + "\"").append(")");
+            condition.append(" OR (ORG_CHANNEL_TYPE ").append(":\"").append(80003 + "\"");
+            condition.append(" AND SEC_ORG_TYPE ").append(":\"").append(69628 + "\"").append("))");
+            condition.append(" AND (CHAIN_ORG_ID ").append(" IS NULL ").append(")");
+			list=searchChainPoitFromFS(condition.toString());
+		}
+		return list;
+	}
+	
+	/**
+	 * 查询角色大类
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public CommonKeyValue[] qryRoleType(boolean checkPermission) throws RemoteException, Exception{
+		int roleSeq= Integer.valueOf(SessionUtil.getRoleSeq());
+		IBOBsStaticDataValue[] bsStaticDataValues= StaticDataUtil.getStaticData("ROLE_TYPE");
+		List<CommonKeyValue> list=new ArrayList<CommonKeyValue>();
+		if(bsStaticDataValues!=null&&bsStaticDataValues.length>0){
+			for(int i=0;i<bsStaticDataValues.length;i++){
+				int tmpRoleSeq=Integer.valueOf(bsStaticDataValues[i].getCodeValue());
+				if(checkPermission&&roleSeq>tmpRoleSeq){
+					continue;
+				}
+				CommonKeyValue commonKeyValue=new CommonKeyValue();
+				commonKeyValue.setKey(bsStaticDataValues[i].getCodeValue());
+				commonKeyValue.setValue(bsStaticDataValues[i].getCodeName());
+				list.add(commonKeyValue);
+			}
+		}
+		return (CommonKeyValue[])list.toArray(new CommonKeyValue[0]);
+	}
+	
+	/**
+	 * 根据角色大类查询角色
+	 * @param roleType
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public CommonKeyValue[] qryRoleByRoleType(String roleType) throws RemoteException, Exception{
+		List<CommonKeyValue> list=new ArrayList<CommonKeyValue>();
+		IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "ROLE", null);
+		if(bsParaDetailValues!=null){
+			List roleList=new ArrayList();
+			for(int i=0;i<bsParaDetailValues.length;i++){
+				if(roleType.equals(bsParaDetailValues[i].getPara3())){
+					String[] roleArray= bsParaDetailValues[i].getPara1().split(",");
+					List tmpList=Arrays.asList(roleArray);
+					roleList.addAll(tmpList);
+				}
+			}
+			ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+			IBOSecRoleValue[] roleValues= secBaseSV.getSecRoleValueByIds(roleList);
+			if(roleValues!=null){
+				for(int i=0;i<roleValues.length;i++){
+					String roleId=String.valueOf(roleValues[i].getRoleId());
+					CommonKeyValue commonKeyValue=new CommonKeyValue();
+					commonKeyValue.setKey(roleId);
+					commonKeyValue.setValue(roleValues[i].getRoleName());
+					list.add(commonKeyValue);
+				}
+			}
+		}
+		return (CommonKeyValue[])list.toArray(new CommonKeyValue[0]);
+	}
+	
+	/**
+	 * 分类别查询所有角色
+	 * @param
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public List<CommonKeyValue[]> qryAllRole(boolean checkPermission) throws RemoteException, Exception{
+		List<CommonKeyValue[]> list=new ArrayList<CommonKeyValue[]>();
+		IBOBsParaDetailValue[] bsParaDetailValues= ParaDetailUtil.getParaDetailValues("X", "ROLE", null);
+		if(bsParaDetailValues!=null){
+			int roleSeq= 1;
+			if(StringUtil.isNotEmpty(SessionUtil.getRoleSeq())){
+				roleSeq=Integer.valueOf(SessionUtil.getRoleSeq());
+			}
+			List paraList=new ArrayList();
+			for(int i=0;i<bsParaDetailValues.length;i++){
+				int tmpRoleSeq=Integer.valueOf(bsParaDetailValues[i].getPara3());
+				if(checkPermission&&roleSeq>tmpRoleSeq){
+					continue;
+				}
+				paraList.add(bsParaDetailValues[i]);
+			}
+			Collections.sort(paraList,new Comparator<IBOBsParaDetailValue>(){
+			    public int compare(IBOBsParaDetailValue bean1,IBOBsParaDetailValue bean2) {
+			    	int seq1 = Integer.valueOf(bean1.getPara3());
+			    	int seq2 = Integer.valueOf(bean2.getPara3());
+			    	if(seq1>seq2){
+			    		return 1;
+			    	}
+			    	return -1;
+			    }
+			});
+
+			ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+			Map<String,List<IBOSecRoleValue>> roleTypeMap=new LinkedHashMap<String,List<IBOSecRoleValue>>();
+			for(int i=0;i<paraList.size();i++){
+				IBOBsParaDetailValue paraDetailValue=(IBOBsParaDetailValue)paraList.get(i);
+				String[] roleArray= paraDetailValue.getPara1().split(",");
+				List<String> tmpList=new ArrayList<String>();
+				Collections.addAll(tmpList, roleArray);
+				String roleType=paraDetailValue.getPara3();
+				IBOBsStaticDataValue staticDataValue= StaticDataUtil.getStaticData("ROLE_TYPE", roleType);
+				if(staticDataValue!=null){
+					roleType=staticDataValue.getCodeName();
+				}
+				IBOSecRoleValue[] roleValues= secBaseSV.getSecRoleValueByIds(tmpList);
+				if(roleValues==null && roleValues.length <=0) continue;
+				List<IBOSecRoleValue> roleValueList = new ArrayList<IBOSecRoleValue>();
+				Collections.addAll(roleValueList, roleValues);
+				if(roleTypeMap.containsKey(roleType)){
+					roleTypeMap.get(roleType).addAll(roleValueList);
+				}else{
+					roleTypeMap.put(roleType,roleValueList);
+				}
+			}
+
+			//过滤部分角色
+			IBOBsParaDetailValue[] paraDetailValues=ParaDetailUtil.getParaDetailValues("X", "WORK_FLOW", "ROLE");
+			List allowRoles=new ArrayList();
+			if(paraDetailValues!=null&&paraDetailValues.length>0){
+				if(StringUtil.isNotEmpty(paraDetailValues[0].getPara1())){
+					String[] roles=paraDetailValues[0].getPara1().split(",");
+					if(roles!=null&&roles.length>0){
+						for(int i=0;i<roles.length;i++){
+							allowRoles.add(roles[i]);
+						}
+					}
+				}
+			}
+			Iterator iterator= roleTypeMap.keySet().iterator();
+			while(iterator.hasNext()){
+				String roleType=String.valueOf(iterator.next());
+				List<IBOSecRoleValue>  roleList = roleTypeMap.get(roleType);
+				//CommonKeyValue[] commonKeyValues=new CommonKeyValue[roleList.size()];
+				if(null == roleList || roleList.size() <= 0) continue;
+				List<CommonKeyValue> commonKeyValues=new ArrayList<CommonKeyValue>();
+				for(IBOSecRoleValue role: roleList){
+					String roleId=String.valueOf(role.getRoleId());
+					if(!allowRoles.contains(roleId)&&checkPermission){
+						continue;
+					}
+					String roleName= role.getRoleName();
+					CommonKeyValue commonKeyValue=new CommonKeyValue();
+					commonKeyValue.setKey(roleId);
+					commonKeyValue.setValue(roleName);
+					commonKeyValue.setExt1(roleType);
+					commonKeyValues.add(commonKeyValue);
+				}
+				list.add((CommonKeyValue[])commonKeyValues.toArray(new CommonKeyValue[0]));
+			}
+		}
+		return list;
+	}
+	
+	public QBOSecOpStaffOrgStationRoleBean[] pagingQryOpByRoleId(String roleType, String roleId, String regionId, String countyId, int start, int end) throws RemoteException, Exception{		
+		ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+		return secBaseSV.pagingQryOpByRoleId(roleType, roleId, regionId, countyId, start, end);
+	}
+	
+	public int pagingQryOpTotalByRoleId(String roleType, String roleId, String regionId, String countyId) throws RemoteException, Exception{
+		ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+		return secBaseSV.pagingQryOpTotalByRoleId(roleType, roleId, regionId, countyId);
+	}
+	
+	
+	/**
+	 * 根据角色编号查询人员信息，工作流专用
+	 * @param roleId
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public QBOSecOpStationOrgBean[] qryOpAndOrgByRoleId(String roleId,String regionId,String countyId) throws RemoteException, Exception{
+		roleId = org.apache.commons.lang.StringUtils.defaultIfEmpty(roleId, "");
+		regionId = org.apache.commons.lang.StringUtils.defaultIfEmpty(regionId, "");
+		countyId = org.apache.commons.lang.StringUtils.defaultIfEmpty(countyId, "");
+		
+		List<QBOSecOpStationOrgBean> list=new ArrayList<QBOSecOpStationOrgBean>();
+		ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+		IQBOSecOpStationOrgValue[] opStationOrgValues= secBaseSV.qryOpAndOrgByRoleId(roleId,regionId,countyId,null,false);
+		if(opStationOrgValues!=null&&opStationOrgValues.length>0){
+			for(int i=0;i<opStationOrgValues.length;i++){
+				list.add((QBOSecOpStationOrgBean)opStationOrgValues[i]);
+			}
+		}
+		//add by wuxt 对其他这个角色大类的角色做特殊处理，如果传了countyId,允许查出该县市归属地市的人员
+		IBOBsParaDetailValue[] specificRoleValues=ParaDetailUtil.getParaDetailValues("X", "ROLE","SPECIFIC_MANAGER");
+		boolean isSpecificRole=false;
+		if(specificRoleValues!=null&&specificRoleValues.length>0){
+			for(int i=0;i<specificRoleValues.length;i++){
+				String paraStr=specificRoleValues[i].getPara1();
+				if (StringUtil.isNotEmpty(paraStr)) {
+					String[] para1=specificRoleValues[i].getPara1().split(",");
+					for (int j = 0; j < para1.length; j++) {
+						if(roleId.equals(para1[j])){
+							isSpecificRole=true;
+							break;
+						}
+					}
+					if(isSpecificRole){
+						break;
+					}
+				}
+			}
+		}
+		if(isSpecificRole&&StringUtil.isNotEmpty(countyId)&&!countyId.equals(this.qryCountyIdByRegionId(regionId))){
+			IQBOSecOpStationOrgValue[] regionOpers= secBaseSV.qryOpAndOrgByRoleId(roleId,regionId,this.qryCountyIdByRegionId(regionId),null,false);
+			if(regionOpers!=null&&regionOpers.length>0){
+				for(int i=0;i<regionOpers.length;i++){
+					list.add((QBOSecOpStationOrgBean)regionOpers[i]);
+				}
+			}
+		}
+		Map temMap=new HashMap();
+		List<QBOSecOpStationOrgBean> retList=new ArrayList<QBOSecOpStationOrgBean>();
+		for(int i=0;i<list.size();i++){
+			if(!temMap.containsKey(((QBOSecOpStationOrgBean)list.get(i)).getCode())){
+				temMap.put(((QBOSecOpStationOrgBean)list.get(i)).getCode(), "");
+				retList.add(list.get(i));
+			}
+		}
+		return (QBOSecOpStationOrgBean[])retList.toArray(new QBOSecOpStationOrgBean[0]);
+	}
+	
+	/**
+	 * 根据角色编号查询默认岗位的人员信息
+	 * @param roleId
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public QBOSecOpStationOrgBean[] qryDefaultOpAndOrgByRoleId(String roleId,String regionId,String countyId,Long areaId) throws RemoteException, Exception{
+		List<QBOSecOpStationOrgBean> list=new ArrayList<QBOSecOpStationOrgBean>();
+		ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+		IQBOSecOpStationOrgValue[] opStationOrgValues= secBaseSV.qryOpAndOrgByRoleId(roleId,regionId,countyId,areaId,true);
+		if(opStationOrgValues!=null&&opStationOrgValues.length>0){
+			for(int i=0;i<opStationOrgValues.length;i++){
+				list.add((QBOSecOpStationOrgBean)opStationOrgValues[i]);
+			}
+		}
+		return (QBOSecOpStationOrgBean[])list.toArray(new QBOSecOpStationOrgBean[0]);
+	}
+	
+	/**
+	 * 根据角色编号和阶段序列查询人员信息
+	 * @param roleId
+	 * @param stageSeq
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public QBOSecOpStationOrgBean[] qryOpByRoleIdAndStageSeq(String roleId,Integer stageSeq) throws RemoteException, Exception{
+		List<QBOSecOpStationOrgBean> list=new ArrayList<QBOSecOpStationOrgBean>();
+		Map opMap=new HashMap();
+		String regionId=String.valueOf(SessionManager.getUser().get("REGION_ID"));
+		String countyId=String.valueOf(SessionManager.getUser().get("COUNTY_ID"));
+		if(stageSeq==4){
+			countyId=null;
+		}
+		ISecBaseSV secBaseSV= (ISecBaseSV)ServiceFactory.getService(ISecBaseSV.class);
+		IQBOSecOpStationOrgValue[] opStationOrgValues= secBaseSV.qryOpAndOrgByRoleId(roleId,regionId,countyId,null,false);
+		if(opStationOrgValues!=null&&opStationOrgValues.length>0){
+			for(int i=0;i<opStationOrgValues.length;i++){
+				if(!opMap.containsKey(opStationOrgValues[i].getOperatorId())){
+					list.add((QBOSecOpStationOrgBean)opStationOrgValues[i]);
+					opMap.put(opStationOrgValues[i].getOperatorId(), "");
+				}
+			}
+		}
+		return (QBOSecOpStationOrgBean[])list.toArray(new QBOSecOpStationOrgBean[0]);
+	}
+	
+	private String qryCountyIdByRegionId(String regionId) throws Exception{
+		long orgId=0L;
+		if("570".equals(regionId)){
+			orgId=11;
+		}else if("571".equals(regionId)){
+			orgId=12;
+		}else if("572".equals(regionId)){
+			orgId=13;
+		}else if("573".equals(regionId)){
+			orgId=14;
+		}else if("574".equals(regionId)){
+			orgId=15;
+		}else if("575".equals(regionId)){
+			orgId=16;
+		}else if("576".equals(regionId)){
+			orgId=17;
+		}else if("577".equals(regionId)){
+			orgId=18;
+		}else if("578".equals(regionId)){
+			orgId=19;
+		}else if("579".equals(regionId)){
+			orgId=20;
+		}else if("580".equals(regionId)){
+			orgId=21;
+		}
+		ISecOrganizeSV organizeSV=(ISecOrganizeSV)ServiceFactory.getService(ISecOrganizeSV.class);
+		IBOSecOrganizeValue organizeValue= organizeSV.getSecOrganizeById(orgId);
+		return RegionUtil.getRegionIdByDistrictId(organizeValue.getCountyId());
+	}
+
+	public String getSmsContent(String templateId,String smsCode,SMS_LIST smsList){
+        String txt = "";
+        try {
+            BOBSSOSMSNotifyTamplateBean b = BOBSSOSMSNotifyTamplateEngine.getBean(Long.valueOf(templateId));
+            txt = b.getSmsTamplateContent();
+            if (null != smsList) {
+                SMS_INFO[] is = smsList.getSMS_INFO();
+                if (null != is) {
+                    for (SMS_INFO i : is) {
+                        txt = txt.replaceAll(i.getKEY(), i.getVALUE());
+                    }
+                }
+            }
+        }catch (Exception e){
+        	log.error("根据短信模板===" + templateId + ",构造短信内容失败！");
+        }
+        return txt;
+    }
+	
+	@Override
+	public void sendSms(String templateId,String phoneNum,String smsCode,SMS_LIST smsList) throws RemoteException, Exception {
+		
+		if(StringUtil.isNull(templateId) || StringUtil.isNull(phoneNum)){
+			log.error("短信模板ID和手机号不能为空！");
+			throw new Exception("短信模板ID和手机号不能为空！");
+		}
+		String paramType = InfConstants.INTF_URL_CFG.INF_PARAM_TYPE;
+        String paramCode = InfConstants.INTF_URL_CFG.INF_PARAM_CODE_SMS;
+        IBOBsParaDetailValue[] bsParaDetailArr = ParaDetailUtil.getParaDetailValues(InfConstants.INTF_URL_CFG.REGION_ID, paramType, paramCode);	
+		if(null == bsParaDetailArr || bsParaDetailArr.length == 0){
+			log.error("短信接口参数配置为空,paramType===" + paramType + ",paramCode===" + paramCode + "！");
+			throw new Exception("短信接口参数配置为空,paramType===" + paramType + ",paramCode===" + paramCode + "！");
+		}
+		
+		String curProvince = bsParaDetailArr[0].getPara2();
+		String smsSwitch = bsParaDetailArr[0].getPara3();
+		if(StringUtil.isNull(curProvince) || StringUtil.isNull(smsSwitch)){
+			log.error("短信接口省份和开关参数配置为空,paramType===" + paramType + ",paramCode===" + paramCode + "！");
+			throw new Exception("短信接口省份和开关参数配置为空,paramType===" + paramType + ",paramCode===" + paramCode + "！");
+		}
+		
+        if("HN".equals(curProvince)){
+        	BUSI_INFO busiInfo = new BUSI_INFO();
+            busiInfo.setTEMPLATE_ID(templateId);
+            busiInfo.setBILL_ID(phoneNum);
+            busiInfo.setSMS_CODE(smsCode);
+            busiInfo.setSMS_LIST(smsList);
+            String content = getSmsContent(templateId,smsCode,smsList);
+            DataContainer logdc = new DataContainer();
+            try {
+                logdc.set("LOG_TYPE",phoneNum);
+                logdc.set("phoneNum",phoneNum);
+                logdc.set("smsContent",content);
+                if(InfConstants.ECT_SMS_CODE.IS_SMS_SWITCH_OPEN.equals(smsSwitch)){
+                	boolean isSuccess = SMSSender.sendSMSSingle(phoneNum, content);
+                	if(!isSuccess) {
+                        String msg = "调用短信接口失败：phoneNum:" + phoneNum + " templateId:" + templateId;
+                        log.error(msg);
+                        logdc.set("result","false");
+                        LogUtils.saveChnlOperLog("LOG_TYPE","","SMS",logdc);
+                        throw new Exception(msg);
+                    }else{
+                        logdc.set("result","true");
+                        LogUtils.saveChnlOperLog("LOG_TYPE","","SMS",logdc);
+                    }
+                }else{
+                	 logdc.set("result","smsSwitchOff");
+                     LogUtils.saveChnlOperLog("LOG_TYPE","","SMS",logdc);
+                }
+            }catch(Exception e){
+                logdc.set("result","error");
+                logdc.set("error",e.getMessage());
+                LogUtils.saveChnlOperLog("LOG_TYPE","","SMS",logdc);
+            }
+        }else if("ZJ".equals(curProvince)) {
+            String wsClientCode = "ESB_BASE_SMS_PUSH_PUSH_001";
+            String methodName = "http://esb-sc.yw.zj.chinamobile.com;ESB_BASE_SMS_PUSH_PUSH_001";
+
+            BUSI_INFO busiInfo = new BUSI_INFO();
+
+            busiInfo.setTEMPLATE_ID(templateId);
+            busiInfo.setBILL_ID(phoneNum);
+            busiInfo.setSMS_CODE(smsCode);
+            busiInfo.setSMS_LIST(smsList);
+
+            String result = SoapUtil.invokeMethod3(wsClientCode, methodName, busiInfo);
+            XMLHelper xml = new XMLHelper();
+            if (log.isDebugEnabled()) {
+                log.error("ESB_BASE_SMS_PUSH_PUSH_001短信接口返回为：" + result);
+            }
+            RespParam respParam = xml.xmlToRespParam(result);
+            if (!CMConstants.EsbConstant.ESB_SUCCESS_CODE.equals(respParam.getPubInfo().get(CMConstants.EsbConstant.RESULT_CODE))) {
+                String code = respParam.getPubInfo().get(CMConstants.EsbConstant.RESULT_CODE);
+                String msg = "调用短信接口失败：" + code + respParam.getPubInfo().get(CMConstants.EsbConstant.RESULT_MSG);
+                log.error(msg);
+                throw new Exception(msg);
+            }
+        }
+	}
+	
+	/**
+	 * 根据操作员编号查询员工信息
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	public BOSecStaffBean getStaffByCode(String code) throws RemoteException, Exception{
+		ISecframeFSV secframeFSV=(ISecframeFSV)ServiceFactory.getService(ISecframeFSV.class);
+		IBOSecOperatorValue operatorValue= secframeFSV.getOperatorByCode(code);
+		if(operatorValue!=null){
+			IBOSecStaffValue staffValue=secframeFSV.getStaffByOperatorId(operatorValue.getOperatorId());
+			if(staffValue!=null){
+				return (BOSecStaffBean)staffValue;
+			}
+		}
+		return new BOSecStaffBean();
+	}
+
+	/**
+	 * 根据操作员编号查询员工信息
+	 * @return
+	 * @throws java.rmi.RemoteException
+	 * @throws Exception
+	 */
+	@Override
+	public BOSecStaffBean getStaffById(long oper_id) throws RemoteException, Exception{
+			ISecframeFSV secframeFSV=(ISecframeFSV)ServiceFactory.getService(ISecframeFSV.class);
+			BOSecStaffBean staffbean = new BOSecStaffBean();
+			IBOSecStaffValue staffValue=secframeFSV.getStaffByOperatorId(oper_id);
+			if(staffValue!=null){
+				staffbean = (BOSecStaffBean)staffValue;
+			}
+			IBOSecOperatorValue opervalue = secframeFSV.getOperatorById(oper_id);
+			String logincode="";
+			if(opervalue!=null){
+				logincode =  opervalue.getCode();
+			}
+			if(logincode!=null && !("").equals(logincode)){
+				DataContainer dt = new DataContainer();
+				dt.set("login_code", logincode);
+				UapMainAcct mainacct = QueryOperInfoService.QryOperInfo(dt);
+				if(mainacct!=null){
+					staffbean.setEmail(mainacct.getEmail());
+					staffbean.setBillId(mainacct.getMobile());
+				}
+			}
+		return staffbean;
+	}
+	@Override
+	public RolesInfoQryRsp getRolesByOpId() throws Exception, RemoteException {
+		RolesInfoQryRsp rsp=new RolesInfoQryRsp();
+		List<String> rolesList=new ArrayList<String>();
+		String[] roles=SessionUtil.qryRolesByOpId();
+		for(int i=0;i<roles.length;i++){
+			rolesList.add(roles[i]);
+		}
+		rsp.setBeans(rolesList);
+		return rsp;
+	}
+	@Override
+	public List<Map> getOrgNameByOrgId(OrgDataReq req) throws Exception, RemoteException{
+		List<Map> orgNames = new ArrayList<Map>();
+		List<String> orgids = new ArrayList<String>();
+		if(req == null){
+			return orgNames;
+		}
+		orgids = req.getOrgid();
+		if(orgids.size()<1){
+			return orgNames;
+		}
+		Map map = DisplayNameUtil.queryOrgNamesByOrgIds(orgids);
+		Map hmap = new HashMap();
+		Iterator it = map.entrySet().iterator();  
+	       while (it.hasNext()) {  
+	           Entry entry = (Entry)it.next();
+	           hmap = new HashMap();
+	           hmap.put(entry.getKey(), entry.getValue());
+	           orgNames.add(hmap);
+	       }  
+		return orgNames;
+	}
+	@Override
+	public List<Map> getOperNameByOperId(OpDataReq req) throws Exception, RemoteException{
+		List<Map> opNames = new ArrayList<Map>();
+		List<String> opids = new ArrayList<String>();
+		if(StringUtils.emptyString(req)){
+			return opNames;
+		}
+		opids = req.getOpid();
+		opNames = DisplayNameUtil.queryOrgNamesByOpIds(opids);
+		
+		return opNames;
+	}
+
+	/**
+	 * 根据组织编号获取组织以及组织扩展信息
+	 * @param orgId
+	 * @return
+	 * @throws Exception 
+	 * @throws java.rmi.RemoteException
+	 */
+	@Override
+	public IBOSecOrgAndExtValue getOrgnizeInfoByOrgId(String orgId) throws RemoteException, Exception{
+		IBOSecOrgAndExtValue result=null;
+		//权限接口调用
+		ISecframeFSV secframeFSV =(ISecframeFSV) ServiceFactory.getService(ISecframeFSV.class);
+		
+		//渠道组织信息
+		result= secframeFSV.qrySecOrganizeById(orgId);
+		
+		return result;
+	}
+
+	@Override
+	public IBOBsOperationValue[] getAllBsOperation() throws Exception,
+			RemoteException {
+		IBaseDAO baseDao = (IBaseDAO) ServiceFactory.getService(IBaseDAO.class);
+		return baseDao.getAllBsOperation();
+	}
+	
+	public List<CommonKeyValue> qrySubBusiness(String businessKey) throws Exception,RemoteException{
+		String paraType="";
+		String paraCode="";
+		if("a".equals(businessKey)){
+			paraType=AmsConst.PARA_DETAIL.AM_AGENT_BUSINESS_ID_REQUIRE_EPAY;
+			paraCode=AmsConst.PARA_DETAIL.BUSINESS_ID_REQUIRE_EPAY;
+		}else if("d".equals(businessKey)){
+			paraType=AmsConst.PARA_DETAIL.AM_AGENT_BUSINESS_ID_EPAY;
+			paraCode=AmsConst.PARA_DETAIL.BUSINESS_ID_EPAY;
+		}else if("e".equals(businessKey)){
+			paraType=AmsConst.PARA_DETAIL.AM_AGENT_BUSINESS_ID_EPAY_REV;
+			paraCode=AmsConst.PARA_DETAIL.BUSINESS_ID_EPAY_REV;
+		}else if("f".equals(businessKey)){
+			paraType=AmsConst.PARA_DETAIL.AM_AGENT_BUSINESS_ID_EPAY_CALLBACK;
+			paraCode=AmsConst.PARA_DETAIL.BUSINESS_ID_EPAY_CALLBACK;
+		}
+		IBOBaseBsParaDetailValue epayBusIdValue = BsParaDetailCacheImpl.getBaseParaDetailValue(AmsConst.PARA_DETAIL.PARA_DETAIL_REGION_X, paraType, paraCode);
+		List<CommonKeyValue> list=new ArrayList<CommonKeyValue>();
+		if(epayBusIdValue != null){
+			String epayBusiId = epayBusIdValue.getPara1();
+			String[] epayBusis = epayBusiId.split(",");
+			for(int i=0;i<epayBusis.length;i++){
+				IBOBsOperationValue operationValue = BsOperationCacheGetter.getBsOperationValue(Long.valueOf(epayBusis[i]));
+				if(operationValue!=null){
+					CommonKeyValue commonKeyValue=new CommonKeyValue();
+					commonKeyValue.setKey(epayBusis[i]);
+					commonKeyValue.setValue(operationValue.getName());
+					list.add(commonKeyValue);
+				}
+			}	
+		}
+		return list;
+	}
+	
+	public String getMonitorUrl() throws Exception,RemoteException{
+		IBOBsParaDetailValue paraDetailValue= BsParaDetailCacheImpl.getParaDetailValue("X", "MONITOR", "URL");
+		if(paraDetailValue==null){
+			return null;
+		}
+		String user=SessionManager.getUser().getCode();
+		String time=DateUtils.getFormattedDate(ServiceManager.getOpDateTime(),"yyyyMMddHH")+"0000";
+		String urlString=paraDetailValue.getPara1();
+		urlString+="user="+user;
+		urlString+="&encrypt-user="+MD5Util.hexdigest(user+paraDetailValue.getPara2());
+		urlString+="&time="+time;
+		urlString+="&encrypt-time="+MD5Util.hexdigest(time+paraDetailValue.getPara2());
+		return urlString;
+	}
+	
+	@Override
+	public UserDistrictInfo getUserDistrict() throws RemoteException, Exception {
+		UserInfoInterface userInfo = SessionManager.getUser();
+
+		String regionCode = userInfo.get(Constants.REGION_ID).toString();
+		//String regionName = DistrictUtil.getDistrictByRegionId(regionCode).getDistrictName();
+		String countyCode = userInfo.get(Constants.COUNTY_ID).toString();
+		String countyDistrictId = userInfo.get("COUNTY_DISTRICT_ID").toString();
+		//String countyName = RegionUtil.getCountyNameByCountyId(countyCode);
+
+		UserDistrictInfo udi = new UserDistrictInfo();
+		udi.setRegionCode(regionCode);
+//		udi.setRegionName(regionName);
+		udi.setCountyCode(countyCode);
+//		udi.setCountyName(countyName);
+		udi.setCountyId(Long.valueOf(countyDistrictId));
+		return udi;
+	}
+
+	@Override
+	public UserDistrictFrameInfo getUserDistrictFrameInfo() throws RemoteException, Exception {
+		UserInfoInterface userInfo = SessionManager.getUser();
+		String countyDistrictId = userInfo.get("COUNTY_DISTRICT_ID").toString();
+
+		IBOBsDistrictValue values = RegionUtil.getDistrictValueByDistrictId(Long.valueOf(countyDistrictId));
+		if (values != null) {
+			UserDistrictFrameInfo udi = new UserDistrictFrameInfo();
+			if (values.getDistrictTypeId() >= 1) {
+				udi.setProvinceId(values.getTrdDistrictFrame().substring(1, 4));
+			}
+			if (values.getDistrictTypeId() >= 2) {
+				udi.setRegionId(values.getTrdDistrictFrame().substring(4, 8));
+			}
+			if (values.getDistrictTypeId() >= 3) {
+				udi.setCountyId(values.getTrdDistrictFrame().substring(8,12));
+			}
+			if (values.getDistrictTypeId() >= 4) {
+				udi.setAreaId(values.getTrdDistrictFrame().substring(12, 16));
+			}
+
+			return udi;
+		}
+
+		return null;
+	}
+}

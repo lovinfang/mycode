@@ -1,0 +1,180 @@
+package com.asiainfo.hicm.ext.oa.server;
+
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import javax.jws.WebService;
+import javax.xml.ws.Endpoint;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.ai.appframe2.service.ServiceFactory;
+import com.ai.common.bo.BOBsStaticDataBean;
+import com.ai.secframe.common.service.interfaces.ISecframeFSV;
+import com.ai.secframe.orgmodel.ivalues.IBOSecOperatorValue;
+import com.asiainfo.cm.common.bo.BOBsParaDetailBean;
+import com.asiainfo.cm.common.constant.CMConstants;
+import com.asiainfo.cm.common.data.StaticData;
+import com.asiainfo.cm.common.ivalues.IBOBsParaDetailValue;
+import com.asiainfo.cm.common.service.interfaces.IBaseSV;
+import com.asiainfo.cm.common.util.ParaDetailUtil;
+import com.asiainfo.cm.module.workflow.bo.QBOFlowTransOrderBean;
+import com.asiainfo.cm.module.workflow.constant.FlowConstants;
+import com.asiainfo.cm.module.workflow.data.FlowOrderSearchReq;
+import com.asiainfo.cm.module.workflow.data.FlowOrderSearchRsp;
+import com.asiainfo.cm.module.workflow.service.interfaces.IFlowTransOrderSV;
+import com.asiainfo.hicm.ext.oa.data.ExtOAOrderInfoReq;
+import com.asiainfo.hicm.ext.oa.util.DecryptHIUserInfo;
+
+@WebService
+public class ImptDealWrokServices {
+	
+	protected final static Log log = LogFactory.getLog(ImptDealWrokServices.class);
+	private static String workOrderSuccessHasNoResp = "0";   // 获取正常，但是没有待办信息
+	private static String workOrderSuccess = "1";            // 获取正常，有返回待办信息
+	private static String getWorkOrderFail = "2";            // 访问口令出错
+	private static String getWorkOrderInfoFail = "3";        // 获取查询出错
+	private static String hasNoStaff = "4";                  // 系统中没有该人员
+	
+
+	public String[] getImptDealWrok(String StaffId,String rows){
+		
+		String [] mywork = null;
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+//		if(null != req){
+			log.debug("获取OA传递过来的账号信息,开始解析传递过来的 参数!");
+			if(null != StaffId && !"".equals(StaffId)){
+				log.debug("从OA获取过来的staffId="+req.getStaffId());
+				String staffIdOA = req.getStaffId();
+				String rows  = req.getRows();
+				log.debug("OA要查询的账户信息解密前-----"+staffIdOA);
+				String staffId = DecryptHIUserInfo.getEncrypt(staffIdOA);
+				log.debug("OA要查询的账户信息解密后-----"+staffId);
+				
+				long operatorId = 0l;
+				//使用用户信息在我们系统中查询对应的用户
+				ISecframeFSV secframeFSV=(ISecframeFSV)ServiceFactory.getService(ISecframeFSV.class);
+				try {
+					IBOSecOperatorValue operatorValue = secframeFSV.getOperatorByCode(staffId);
+					if(null != operatorValue){
+						log.debug("查询人员的操作id="+operatorValue.getOperatorId());
+						if(operatorValue.getOperatorId() != 0l){
+							operatorId = operatorValue.getOperatorId();
+							//查询工单类型枚举值
+							IBaseSV ibaseSV = (IBaseSV) ServiceFactory.getService(IBaseSV.class);
+							StaticData data = ibaseSV.getStaticDataByCodeType("FLOW_TYPE");
+							List<BOBsStaticDataBean> staticBeans = null;
+							if(null != data && null != data.getBeans()){
+								staticBeans = data.getBeans();
+							}
+							//条件查询工单-查询用户的的代办工单
+							FlowOrderSearchReq allFlowOrderReq = new FlowOrderSearchReq();
+							allFlowOrderReq.setOrder_range(String.valueOf(FlowConstants.OrderRange.STATUS_1));  //工单范围；1：我的工单，2：全部工单
+							allFlowOrderReq.setDest_op_id(Long.valueOf(operatorId)); //查询对应用户
+							allFlowOrderReq.setNotice_type(String.valueOf(FlowConstants.NoticeType.STATUS_1));  // 1:代办 2::已办
+							IFlowTransOrderSV iFlowTransOrderSV = (IFlowTransOrderSV) ServiceFactory.getService(IFlowTransOrderSV.class);
+							log.debug("开始查询工单");
+							FlowOrderSearchRsp rsp = new FlowOrderSearchRsp();
+							rsp = iFlowTransOrderSV.qryAllFlowOrder(allFlowOrderReq);
+							log.debug("查询代办工单结束");
+							int responseLength = 0;
+							if(null != rsp && null != rsp.beans){
+								if(null != rows && !"".equals(rows)){
+									if(Integer.parseInt(rows) < rsp.beans.size()){
+										//返回rows条记录
+										responseLength = Integer.parseInt(rows);
+									}else{
+										responseLength = rsp.beans.size();
+									}
+								}else{
+									responseLength = rsp.beans.size();
+								}
+								
+								mywork = new String[(responseLength+1)];
+								
+								mywork[0] = ImptDealWrokServices.workOrderSuccess;
+								List<QBOFlowTransOrderBean>  flowTransOrderBeanList = rsp.beans;
+								if(null != flowTransOrderBeanList && flowTransOrderBeanList.size() > 0){
+									log.debug("查询代办工单成功"+flowTransOrderBeanList.size());
+									for(int i=0;i<flowTransOrderBeanList.size();i++){
+										if((i+1) <= responseLength){
+											QBOFlowTransOrderBean bean = flowTransOrderBeanList.get(i);
+											String type = bean.getFlowType();
+											for(BOBsStaticDataBean stbean : staticBeans){
+												if(null != type && !"".equals(type) && type.equals(stbean.getCodeValue())){
+													type = stbean.getCodeName();
+												}
+											}
+											String id = String.valueOf(bean.getTransOrderId());
+											String title = bean.getCurItemName();
+											String url = getOAWorkFlowUrl();
+											log.debug("--返回给OA的url地址为---"+url);
+											url = url.replaceAll("xxx", staffIdOA);
+											url = url.replaceAll("yyy", id);
+											String time = df.format(bean.getCreateDate());
+											StringBuffer sb = new StringBuffer();
+											sb.append(type).append("|").append(id).append("|").append(title).append("|").append(url).append("|").append(time);
+											log.debug("数据---"+sb.toString());
+											mywork[i+1] = sb.toString();
+											
+										}
+									}
+								}
+							}else{
+								log.debug("1-----查询代办工单但是没有数据");
+								mywork = new String[]{ImptDealWrokServices.workOrderSuccessHasNoResp};
+							}
+						}else{
+							log.debug("2-----查询操作员Id的员工");
+							mywork = new String[]{ImptDealWrokServices.hasNoStaff};
+						}
+					}else{
+						log.debug("------operatorValue------"+"获取失败");
+						mywork = new String[]{ImptDealWrokServices.hasNoStaff};
+					};
+				} catch (Exception e) {
+					log.debug("----3----查询失败");
+					mywork = new String[]{ImptDealWrokServices.getWorkOrderInfoFail};
+					e.printStackTrace();
+				}
+			}else{
+				log.debug("参数传递错误");
+				mywork = new String[]{ImptDealWrokServices.getWorkOrderFail};
+			}
+		/*}else{
+			log.debug("----req为空---");
+			mywork = new String[]{ImptDealWrokServices.getWorkOrderFail};
+		}*/
+		
+		return mywork;
+	}
+	
+	private String getOAWorkFlowUrl() throws Exception{
+		log.debug("查询系统配置单 url");
+		IBOBsParaDetailValue value = getBsParaDetailValueByCode(CMConstants.oaFileType.OA_FILE_DIR_CODE);
+		return value.getPara3();
+	}
+
+	private IBOBsParaDetailValue getBsParaDetailValueByCode(String oaFileDirCode) throws Exception{
+		IBOBsParaDetailValue[] value = ParaDetailUtil.getParaDetailValues("X", CMConstants.oaFileType.OA_WORK_FLOW_ORDER_URL, "0");
+		return (BOBsParaDetailBean)value[0];
+	}
+
+	public static void main(String[] args) {
+		Endpoint.publish("http://127.0.0.1:8081/axis2/services/imptDealWrokServices", new ImptDealWrokServices());
+		System.out.println("webservice success");
+		
+		/*try {
+			ExtOAOrderInfoReq req = new ExtOAOrderInfoReq();
+			req.setStaffId("caihe");
+			ImptDealWrokServices service = new ImptDealWrokServices();
+			String[] test = service.getImptDealWrok(req);
+			for(String s : test){
+				System.out.println("---"+s);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}*/
+	}
+}

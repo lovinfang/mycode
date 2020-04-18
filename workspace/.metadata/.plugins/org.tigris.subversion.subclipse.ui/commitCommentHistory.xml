@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CommitComments>	<CommitComment>修改通过region_id获取district_id的方法调用</CommitComment>
+	<CommitComment>修改上传乡镇文件抛出找不到该渠道，但是渠道确实存在的bug</CommitComment>
+	<CommitComment>修改照片上传bug</CommitComment>
+	<CommitComment>添加合同扫描件以及房屋合同扫描件入库代码</CommitComment>
+	<CommitComment>修改静态数据</CommitComment>
+	<CommitComment>添加qryChnlExtInfo接口实现方法</CommitComment>
+	<CommitComment>添加qryChnlExtInfo接口</CommitComment>
+	<CommitComment>修改直接用sql查询</CommitComment>
+	<CommitComment>修改竞争对手录入信息中获取渠道资料信息bug</CommitComment>
+	<CommitComment>根据新的一级类型二级类型修改页面整体bug</CommitComment>
+</CommitComments>
